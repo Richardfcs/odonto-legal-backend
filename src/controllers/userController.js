@@ -28,3 +28,31 @@ exports.getUsers = async (req, res) => {
         console.log("erro ao listar todos os usuários")
     }
 };
+
+exports.updateUserRole = async (req, res) => {
+    try {
+      const { _id, role } = req.body;
+  
+      // Validação básica: verifica se a role informada é válida
+      const validRoles = ['admin', 'perito', 'assistente'];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ message: 'Role inválida. Role permitida: admin, perito ou assistente.' });
+      }
+  
+      // Atualiza apenas o campo "role" do usuário
+      const user = await User.findByIdAndUpdate(
+        _id,
+        { role },
+        { new: true }  // retorna o documento atualizado
+      );
+  
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado.' });
+      }
+  
+      return res.status(200).json({ message: 'Role atualizada com sucesso.', user });
+    } catch (error) {
+      console.error('Erro ao atualizar a role do usuário:', error);
+      return res.status(500).json({ message: 'Erro interno do servidor.' });
+    }
+  };
