@@ -31,7 +31,6 @@ exports.getUsers = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
@@ -81,7 +80,6 @@ exports.getOnlyUser = async (req, res) => {
         res.status(500).json({ msg: error });
     };
 }
-=======
 exports.updateUserRole = async (req, res) => {
     try {
       const { _id, role } = req.body;
@@ -109,4 +107,3 @@ exports.updateUserRole = async (req, res) => {
       return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
   };
->>>>>>> f3dd4b019edb03701dc9fcf9309fa9d6f6caf2be

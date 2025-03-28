@@ -20,17 +20,6 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     cro: {
-<<<<<<< HEAD
-        type: Number,
-        required: true
-    },
-    role: {
-        type: String,
-        enum: ['admin', 'perito', 'assistente'], // Roles definidos
-        required: true,
-        default: 'assistente' // Role padrão para novos usuários, pode ser ajustado
-    },
-=======
          type: Number,
           required: true 
         },
@@ -40,7 +29,6 @@ const userSchema = new mongoose.Schema({
             required : true,
             default: 'assistente' // Role padrão para novos usuários, pode ser ajustado
         },
->>>>>>> f3dd4b019edb03701dc9fcf9309fa9d6f6caf2be
     createdAt: {
         type: Date,
         default: Date.now
