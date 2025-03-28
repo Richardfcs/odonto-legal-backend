@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-    //profile: { type: String, enum: ['admin', 'user'], required: true }
+
 });
 
 // Middleware para criptografar senha antes de salvar
