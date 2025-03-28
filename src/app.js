@@ -2,7 +2,6 @@ const express = require('express'); // para abrir o servidor
 const cors = require('cors'); // para não ter erros na hora das requisições
 const bodyParser = require('body-parser'); // para limitar requisições extensas
 const morgan = require('morgan'); // para testar as requisições
-// const cookieParser  = require('cookie-parser');
 const connectDB = require('./db/database'); // para conectar ao banco de dados
 const userRoutes = require('./routes/userRoutes') // para pegar todas as rotas
 require('dotenv').config(); // para usar as variáveis que ficam no .env
@@ -15,8 +14,6 @@ connectDB();
 
 // Middleware (interceptador de dados)
 app.use(cors());
-// Colocar Cookies (planos futuros) comentado por enquanto
-//app.use(cookieParser());
 app.use(bodyParser.json({ limit: '50mb' })); //Colocando um limite de dados de 50mb
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true})) // Para dados enviados via URL
 app.use(express.static('public'));
