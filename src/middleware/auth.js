@@ -1,18 +1,18 @@
+// middleware/auth.js
 const jwt = require('jsonwebtoken');
 
-exports.checkToken = async (req, res, next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-  
-    if (!token) return res.status(401).json({ msg: "Acesso negado!" });
-  
-    try {
-      const secret = process.env.SECRET;
-  
-      jwt.verify(token, secret);
-  
-      next();
-    } catch (err) {
-      res.status(400).json({ msg: "O Token é inválido!" });
+exports.verifyJWT = (req, res, next) => {
+    const token = req.headers['token'];
+    if (!token) {
+        return res.status(401).json({ auth: false, message: 'Token não fornecido.' });
     }
-  };
+
+    jwt.verify(token, process.env.SECRET, (decoded) => {
+        if (!token) {
+            return res.status(500).json({ auth: false, message: 'Falha ao autenticar o token.' });
+        }
+
+        req.userId = decoded.id; // <--- Informação importante: salva o ID do usuário no 'req'
+        next(); // <--- Chama 'next()' para permitir que a requisição continue para o controller
+    });
+};

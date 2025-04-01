@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 
 // criando uma tabela no banco de dados para o caso
 const caseSchema = new mongoose.Schema({
@@ -40,10 +39,9 @@ const caseSchema = new mongoose.Schema({
     default: Date.now,
   },
 
-  //profile: { type: String, enum: ['admin', 'user'], required: true }
 });
 
 const Case = mongoose.model("Case", caseSchema);
 
-//Exportar user para userController
+//Exportar o caso para caseController
 module.exports = Case;

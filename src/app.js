@@ -23,7 +23,7 @@ app.use(express.static('public'));
 app.use(morgan(':method :url :response-time :date[web] :status :res[content-length]')) 
 
 // Criando a porta do Servidor
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Recebendo o retorno se o server está rodando
 

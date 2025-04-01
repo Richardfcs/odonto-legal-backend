@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs'); // Importar bcrypt
 
 // Criação da função de criar usuário / Cadastrar usuário
 // para exportar para userRoutes
@@ -34,34 +34,38 @@ exports.getUsers = async (req, res) => {
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
-    // check if user exists
-    const user = await User.findOne({ email: email });
+    try { // Envolver o código principal em try...catch para capturar erros iniciais
+        // Verificar se o usuário existe
+        const user = await User.findOne({ email: email });
 
-    if (!user) {
-        console.log("Usuário não encontrado!");
-        return res.status(404).json({ msg: "Usuário não encontrado!" });
-    }
+        if (!user) {
+            console.log("Usuário não encontrado!");
+            return res.status(404).json({ msg: "Usuário não encontrado!" }); // <--- ADICIONE 'return'
+        }
 
-    // check if password match
-    //const checkPassword = await bcrypt.compare(password, user.password);
+        // Verificar se a senha coincide usando bcrypt.compare()
+        const checkPassword = await bcrypt.compare(password, user.password); // Comparar a senha fornecida com o hash armazenado
 
-    if (!password) {
-        return res.status(422).json({ msg: "Senha inválida" });
-    }
-    try {
+        if (!checkPassword) { // Verificar o resultado booleano de bcrypt.compare()
+            return res.status(422).json({ msg: "Senha inválida" }); // <--- ADICIONE 'return'
+        }
+
         const secret = process.env.SECRET;
 
         const token = jwt.sign(
             {
                 id: user._id,
             },
-            secret
+            secret,
+            { expiresIn: '1h' }
         );
-
-        res.status(200).json({ msg: "Autenticação realizada com sucesso!", token });
+        console.log("Valor de process.env.SECRET:", secret);
+        console.log("Token JWT Gerado:", token);
+        return res.status(200).json({ msg: "Autenticação realizada com sucesso!", token }); // <--- ADICIONE 'return'
     } catch (error) {
-        res.status(500).json({ msg: error });
-    };
+        console.error("Erro durante o login:", error); // Log do erro para debug
+        return res.status(500).json({ msg: "Erro interno no servidor.", error: error.message }); // <--- ADICIONE 'return' e envie mensagem de erro mais informativa
+    }
 };
 
 exports.getOnlyUser = async (req, res) => {
