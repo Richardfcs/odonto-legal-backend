@@ -4,6 +4,7 @@ const bodyParser = require('body-parser'); // para limitar requisições extensa
 const morgan = require('morgan'); // para testar as requisições
 const connectDB = require('./db/database'); // para conectar ao banco de dados
 const userRoutes = require('./routes/userRoutes') // para pegar todas as rotas
+const caseRoutes = require("./routes/caseRoutes"); // para pegar todos os casos
 require('dotenv').config(); // para usar as variáveis que ficam no .env
 
 // Criando o servidor com o express
@@ -25,8 +26,9 @@ app.use(morgan(':method :url :response-time :date[web] :status :res[content-leng
 const PORT = process.env.PORT || 5000;
 
 // Recebendo o retorno se o server está rodando
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // usando a rota
 app.use('/api', userRoutes)
-
+app.use("/case", caseRoutes);
