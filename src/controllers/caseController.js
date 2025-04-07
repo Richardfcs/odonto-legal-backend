@@ -28,3 +28,24 @@ exports.getCases = async (req, res) => {
         console.log("erro ao listar todos os casos")
     }
 };
+
+exports.getCasesByCategory = async (req, res) => {
+    try {
+      
+      const { category } = req.query;
+  
+      
+      const casosFiltrados = await Case.find({ category });
+  
+      
+      if (casosFiltrados.length === 0) {
+        return res.status(404).json({ message: "Nenhum caso encontrado para essa categoria." });
+      }
+  
+      
+      return res.status(200).json(casosFiltrados);
+    } catch (error) {
+      console.error("Erro ao filtrar casos por categoria:", error);
+      return res.status(500).json({ message: "Erro interno no servidor." });
+    }
+  };
