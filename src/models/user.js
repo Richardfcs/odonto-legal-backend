@@ -9,7 +9,9 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
+        match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
     },
     telephone: {
         type: String,
@@ -20,15 +22,19 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     cro: {
-         type: Number,
-          required: true 
-        },
-        role: {
-            type: String, 
-            enum: ['admin', 'perito', 'assistente'], // Roles definidos
-            required : true,
-            default: 'assistente' // Role padrão para novos usuários, pode ser ajustado
-        },
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['admin', 'perito', 'assistente'], // Roles definidos
+        required: true,
+        default: 'assistente' // Role padrão para novos usuários, pode ser ajustado
+    },
+    cases: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Case' // Referência aos casos do usuário
+    }],
     createdAt: {
         type: Date,
         default: Date.now

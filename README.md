@@ -5,6 +5,7 @@ requisitos: node instalado
 fazer um arquivo .env contendo:
 MONGO_URI={"o link do seu banco de dados mongodb atlas"}
 PORT={porta que queira}
+SECRET={uma senha aleatória}
 
 npm i
 
@@ -35,3 +36,33 @@ Para modificar as funcionalidades é só ter atenção em cada pasta dela e cria
 (caso precise de um banco de dados pode me pedir que mando o link)
 
 Vamos pra fente!
+
+## criar usuários json:
+{
+    "name": "exemplo",
+    "email": "exemplo@gmail.com",
+    "telephone": "exemplo",
+    "password": "exemplo",
+    "cro": "exemplo"
+}
+
+## criar casos json:
+
+{
+    "nameCase": "exemplo",
+    "Description": "exemplo",
+    "status": "exemplo", // cuidado tem status específicos no enum
+    "location": "exemplo",
+    "category": "crime" // cuidado há categorias específicas
+}
+
+## criar evidências json:
+
+{
+    "caseId": "exemplo", // Substitua pelo ID de um caso existente
+    "evidenceType": "text_description", // tem tipos específicos
+    "title": "Descrição Inicial do Caso",
+    "data": "Paciente do sexo masculino, aproximadamente 30 anos, encontrado..."
+    // "description": "Notas adicionais sobre a evidência..." (opcional)
+    "category": "pericial_findings" // opcional mas recomendado
+}

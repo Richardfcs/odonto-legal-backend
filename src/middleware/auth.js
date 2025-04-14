@@ -1,18 +1,34 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
 
+// Middleware para verificar o token JWT
 exports.verifyJWT = (req, res, next) => {
-    const token = req.headers['token'];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Formato: "Bearer <token>"
+
     if (!token) {
         return res.status(401).json({ auth: false, message: 'Token não fornecido.' });
     }
 
-    jwt.verify(token, process.env.SECRET, (decoded) => {
-        if (!token) {
-            return res.status(500).json({ auth: false, message: 'Falha ao autenticar o token.' });
+    jwt.verify(token, process.env.SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ auth: false, message: 'Token inválido ou expirado.' });
         }
 
-        req.userId = decoded.id; // <--- Informação importante: salva o ID do usuário no 'req'
-        next(); // <--- Chama 'next()' para permitir que a requisição continue para o controller
+        req.userId = decoded.id; // ID do usuário autenticado
+        req.userRole = decoded.role; // Role do usuário (admin, perito, assistente)
+        next();
     });
+};
+
+// Middleware para verificar roles (ex: apenas admin pode acessar)
+exports.authorize = (allowedRoles) => {
+    return (req, res, next) => {
+        if (!allowedRoles.includes(req.userRole)) {
+            return res.status(403).json({
+                error: "Acesso negado. Permissões necessárias: " + allowedRoles.join(', ')
+            });
+        }
+        next();
+    };
 };
