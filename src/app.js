@@ -6,6 +6,9 @@ const connectDB = require('./db/database'); // para conectar ao banco de dados
 const userRoutes = require('./routes/userRoutes'); // para pegar todas as rotas
 const caseRoutes = require('./routes/caseRoutes'); // para pegar todos os casos
 const evidenceRoutes = require('./routes/evidenceRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config(); // para usar as variáveis que ficam no .env
 const helmet = require('helmet');
 
@@ -32,7 +35,19 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
+const uploadsDir = path.join(__dirname, 'uploads');
+const reportsDir = path.join(uploadsDir, 'reports');
+
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(reportsDir)) {
+    fs.mkdirSync(reportsDir, { recursive: true });
+}
+
 // usando a rota
 app.use('/api/user', userRoutes);
 app.use('/api/case', caseRoutes);
 app.use('/api/evidence', evidenceRoutes);
+app.use('/api/report', reportRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
