@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: 'assistente' // Role padrão para novos usuários, pode ser ajustado
     },
+    photo: {
+        type: String
+    },
     cases: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Case' // Referência aos casos do usuário
@@ -38,7 +41,11 @@ const userSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    updateAt: {
+        type: Date,
+        default: Date.now,
+      },
 });
 
 // Middleware para criptografar senha antes de salvar
@@ -50,6 +57,11 @@ userSchema.pre('save', async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
+
+userSchema.pre('save', function (next) {
+    this.updatedAt = Date.now();
+    next();
+  });
 
 const User = mongoose.model('User', userSchema);
 

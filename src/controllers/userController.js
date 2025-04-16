@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs'); // Importar bcrypt
 exports.createUser = async (req, res) => {
     try {
         // 1. Extrair campos do corpo da requisição
-        const { name, email, telephone, password, cro, createdAt } = req.body;
+        const { name, email, telephone, password, cro, photo } = req.body;
 
         // 2. Validação de campos obrigatórios
         if (!name || !email || !telephone || !password || !cro) {
@@ -28,7 +28,7 @@ exports.createUser = async (req, res) => {
             telephone, 
             password, 
             cro, 
-            createdAt,
+            photo,
             role: req.body.role || 'assistente' // Define role padrão se não for fornecido
         });
 

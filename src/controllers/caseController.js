@@ -19,7 +19,9 @@ exports.createCase = async (req, res) => {
             nameCase, 
             Description, 
             status, 
-            location, 
+            location,
+            dateCase,
+            hourCase, 
             category, 
             team 
         } = req.body;
@@ -38,6 +40,8 @@ exports.createCase = async (req, res) => {
             status,
             location,
             category,
+            dateCase,
+            hourCase,
             responsibleExpert, // Usa o ID do usuário logado
             team: team || []   // Se não houver equipe, define como array vazio
         });
@@ -194,6 +198,41 @@ exports.getCasesByData = async (req, res) => {
   
       // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
       const sortOption = order === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+  
+      const cases = await Case.find(filter).sort(sortOption);
+  
+      if (cases.length === 0) {
+        return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
+      }
+  
+      res.status(200).json(cases);
+    } catch (err) {
+      console.error("Erro ao buscar casos:", err);
+      res.status(500).json({ message: "Erro interno do servidor.", error: err.message });
+    }
+  };
+
+  // filtrar casos por data do Caso
+// Exemplo: http://localhost:3000/api/case/fdata?startDate=2024-01-01&endDate=2024-12-31&order=oldest
+exports.getCasesByDataCase = async (req, res) => {
+    try {
+      const { startDate, order } = req.query;
+  
+      const filter = {};
+  
+      // Filtro por intervalo de datas (createdAt)
+      if (startDate) {
+        filter.dateCase = {};
+        if (startDate) {
+          filter.dateCase.$gte = new Date(startDate);
+        }
+        // if (endDate) {
+        //   filter.dateCase.$lte = new Date(endDate);
+        // }
+      }
+  
+      // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
+      const sortOption = order === "oldest" ? { dateCase: 1 } : { dateCase: -1 };
   
       const cases = await Case.find(filter).sort(sortOption);
   

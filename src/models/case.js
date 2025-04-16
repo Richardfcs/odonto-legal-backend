@@ -20,6 +20,12 @@ const caseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  dateCase: {
+    type: Date
+  },
+  hourCase: {
+    type: String
+  },
   responsibleExpert: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
