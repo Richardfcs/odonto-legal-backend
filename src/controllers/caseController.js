@@ -15,21 +15,21 @@ exports.createCase = async (req, res) => {
         }
 
         // 3. Extraia campos OBRIGATÓRIOS do body
-        const { 
-            nameCase, 
-            Description, 
-            status, 
+        const {
+            nameCase,
+            Description,
+            status,
             location,
             dateCase,
-            hourCase, 
-            category, 
-            team 
+            hourCase,
+            category,
+            team
         } = req.body;
 
         // 4. Valide campos obrigatórios
         if (!nameCase || !status || !location || !category) {
-            return res.status(400).json({ 
-                error: "Campos obrigatórios faltando: nameCase, status, location, category." 
+            return res.status(400).json({
+                error: "Campos obrigatórios faltando: nameCase, status, location, category."
             });
         }
 
@@ -69,9 +69,9 @@ exports.createCase = async (req, res) => {
 
     } catch (err) {
         console.error("Erro no createCase:", err.message);
-        res.status(400).json({ 
+        res.status(400).json({
             error: "Erro ao criar caso.",
-            details: err.message 
+            details: err.message
         });
     }
 };
@@ -181,91 +181,91 @@ exports.getCasesByStatus = async (req, res) => {
 // Exemplo: http://localhost:3000/api/case/fdata?startDate=2024-01-01&endDate=2024-12-31&order=oldest
 exports.getCasesByData = async (req, res) => {
     try {
-      const { startDate, endDate, order } = req.query;
-  
-      const filter = {};
-  
-      // Filtro por intervalo de datas (createdAt)
-      if (startDate || endDate) {
-        filter.createdAt = {};
-        if (startDate) {
-          filter.createdAt.$gte = new Date(startDate);
-        }
-        if (endDate) {
-          filter.createdAt.$lte = new Date(endDate);
-        }
-      }
-  
-      // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
-      const sortOption = order === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
-  
-      const cases = await Case.find(filter).sort(sortOption);
-  
-      if (cases.length === 0) {
-        return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
-      }
-  
-      res.status(200).json(cases);
-    } catch (err) {
-      console.error("Erro ao buscar casos:", err);
-      res.status(500).json({ message: "Erro interno do servidor.", error: err.message });
-    }
-  };
+        const { startDate, endDate, order } = req.query;
 
-  // filtrar casos por data do Caso
+        const filter = {};
+
+        // Filtro por intervalo de datas (createdAt)
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) {
+                filter.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                filter.createdAt.$lte = new Date(endDate);
+            }
+        }
+
+        // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
+        const sortOption = order === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+
+        const cases = await Case.find(filter).sort(sortOption);
+
+        if (cases.length === 0) {
+            return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
+        }
+
+        res.status(200).json(cases);
+    } catch (err) {
+        console.error("Erro ao buscar casos:", err);
+        res.status(500).json({ message: "Erro interno do servidor.", error: err.message });
+    }
+};
+
+// filtrar casos por data do Caso
 // Exemplo: http://localhost:3000/api/case/fdata?startDate=2024-01-01&endDate=2024-12-31&order=oldest
 exports.getCasesByDataCase = async (req, res) => {
     try {
-      const { startDate, order } = req.query;
-  
-      const filter = {};
-  
-      // Filtro por intervalo de datas (createdAt)
-      if (startDate) {
-        filter.dateCase = {};
-        if (startDate) {
-          filter.dateCase.$gte = new Date(startDate);
-        }
-        // if (endDate) {
-        //   filter.dateCase.$lte = new Date(endDate);
-        // }
-      }
-  
-      // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
-      const sortOption = order === "oldest" ? { dateCase: 1 } : { dateCase: -1 };
-  
-      const cases = await Case.find(filter).sort(sortOption);
-  
-      if (cases.length === 0) {
-        return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
-      }
-  
-      res.status(200).json(cases);
-    } catch (err) {
-      console.error("Erro ao buscar casos:", err);
-      res.status(500).json({ message: "Erro interno do servidor.", error: err.message });
-    }
-  };
+        const { startDate, order } = req.query;
 
-  // Função para filtrar casos por categoria
-  // Example: GET http://localhost:3000/api/case/fcat?category=acidente
-  exports.getCasesByCategory = async (req, res) => {
-    try {
-      
-      const { category } = req.query;
-  
-      
-      const casosFiltrados = await Case.find({ category });
-  
-      
-      if (casosFiltrados.length === 0) {
-        return res.status(404).json({ message: "Nenhum caso encontrado para essa categoria." });
-      }
-  
-      
-      return res.status(200).json(casosFiltrados);
-    } catch (error) {
-      console.error("Erro ao filtrar casos por categoria:", error);
-      return res.status(500).json({ message: "Erro interno no servidor." });
+        const filter = {};
+
+        // Filtro por intervalo de datas (createdAt)
+        if (startDate) {
+            filter.dateCase = {};
+            if (startDate) {
+                filter.dateCase.$gte = new Date(startDate);
+            }
+            // if (endDate) {
+            //   filter.dateCase.$lte = new Date(endDate);
+            // }
+        }
+
+        // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
+        const sortOption = order === "oldest" ? { dateCase: 1 } : { dateCase: -1 };
+
+        const cases = await Case.find(filter).sort(sortOption);
+
+        if (cases.length === 0) {
+            return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
+        }
+
+        res.status(200).json(cases);
+    } catch (err) {
+        console.error("Erro ao buscar casos:", err);
+        res.status(500).json({ message: "Erro interno do servidor.", error: err.message });
     }
-  };
+};
+
+// Função para filtrar casos por categoria
+// Example: GET http://localhost:3000/api/case/fcat?category=acidente
+exports.getCasesByCategory = async (req, res) => {
+    try {
+
+        const { category } = req.query;
+
+
+        const casosFiltrados = await Case.find({ category });
+
+
+        if (casosFiltrados.length === 0) {
+            return res.status(404).json({ message: "Nenhum caso encontrado para essa categoria." });
+        }
+
+
+        return res.status(200).json(casosFiltrados);
+    } catch (error) {
+        console.error("Erro ao filtrar casos por categoria:", error);
+        return res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};

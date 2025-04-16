@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
     updateAt: {
         type: Date,
         default: Date.now,
-      },
+    },
 });
 
 // Middleware para criptografar senha antes de salvar
@@ -61,7 +61,7 @@ userSchema.pre('save', async function (next) {
 userSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
-  });
+});
 
 const User = mongoose.model('User', userSchema);
 

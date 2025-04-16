@@ -10,7 +10,7 @@ router.post('/', verifyJWT, authorize(['perito', 'admin']), generateReport);
 router.get('/view/:filename', (req, res) => {
     try {
         const filePath = path.join(__dirname, '..', 'uploads', 'reports', req.params.filename);
-        
+
         if (!fs.existsSync(filePath)) {
             return res.status(404).send('Arquivo não encontrado');
         }

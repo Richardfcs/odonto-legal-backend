@@ -21,7 +21,7 @@ pdfMakevfs = {
 const salvarPDFNoStorage = async (buffer, filename, req) => { // Adicione req como parâmetro
     try {
         const uploadPath = path.join(__dirname, '..', 'uploads', 'reports');
-        
+
         // Garante que o diretório existe
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
@@ -29,7 +29,7 @@ const salvarPDFNoStorage = async (buffer, filename, req) => { // Adicione req co
 
         const filePath = path.join(uploadPath, filename);
         fs.writeFileSync(filePath, buffer);
-        
+
         // Retorna a URL completa acessível
         return `${req.protocol}://${req.get('host')}/uploads/reports/${filename}`;
     } catch (error) {
@@ -55,7 +55,7 @@ exports.generateReport = async (req, res) => {
         if (!caso) {
             return res.status(404).json({ error: "Caso não encontrado." });
         }
-        
+
         if (!user) {
             return res.status(404).json({ error: "Usuário não encontrado." });
         }
@@ -76,15 +76,15 @@ exports.generateReport = async (req, res) => {
                 }))
             ],
             styles: {
-                header: { 
-                    fontSize: 22, 
-                    bold: true, 
+                header: {
+                    fontSize: 22,
+                    bold: true,
                     alignment: 'center',
                     margin: [0, 0, 0, 20]
                 },
-                subheader: { 
-                    fontSize: 16, 
-                    bold: true, 
+                subheader: {
+                    fontSize: 16,
+                    bold: true,
                     color: '#2c3e50',
                     margin: [0, 10, 0, 5]
                 }
@@ -133,7 +133,7 @@ exports.generateReport = async (req, res) => {
 
     } catch (err) {
         console.error('Erro no generateReport:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             error: "Erro interno no servidor ao gerar laudo.",
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });

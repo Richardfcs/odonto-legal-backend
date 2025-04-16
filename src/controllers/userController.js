@@ -22,12 +22,12 @@ exports.createUser = async (req, res) => {
         }
 
         // 4. Criar novo usuário
-        const user = new User({ 
-            name, 
-            email, 
-            telephone, 
-            password, 
-            cro, 
+        const user = new User({
+            name,
+            email,
+            telephone,
+            password,
+            cro,
             photo,
             role: req.body.role || 'assistente' // Define role padrão se não for fornecido
         });
@@ -52,9 +52,9 @@ exports.createUser = async (req, res) => {
     } catch (err) {
         // 7. Tratamento de erros
         console.error('Erro ao criar usuário:', err.message);
-        res.status(400).json({ 
+        res.status(400).json({
             error: "Erro ao criar usuário. Verifique os dados e tente novamente.",
-            details: err.message 
+            details: err.message
         });
     }
 };
