@@ -8,8 +8,8 @@ router.post('/', verifyJWT, authorize(['admin']), createUser);
 router.get('/:id', verifyJWT, getOnlyUser);
 router.post('/login', loginUser);
 router.get('/', verifyJWT, getUsers);
-router.put('/', verifyJWT, authorize(['admin']), updateUser);
-router.put('/:id', verifyJWT, authorize(['admin']), updateUserRole);
+router.put('/:id', verifyJWT, authorize(['admin']), updateUser);
+router.patch('/:id', verifyJWT, authorize(['admin']), updateUserRole);
 router.delete('/:id', verifyJWT, authorize(['admin']), deleteUser);
 router.get('/cases/:id', verifyJWT, getUserWithCases);
 
