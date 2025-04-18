@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs'); // Importar bcrypt
 exports.createUser = async (req, res) => {
     try {
         // 1. Extrair campos do corpo da requisição
-        const { name, email, telephone, password, cro, createdAt } = req.body;
+        const { name, email, telephone, password, cro, photo } = req.body;
 
         // 2. Validação de campos obrigatórios
         if (!name || !email || !telephone || !password || !cro) {
@@ -22,13 +22,13 @@ exports.createUser = async (req, res) => {
         }
 
         // 4. Criar novo usuário
-        const user = new User({ 
-            name, 
-            email, 
-            telephone, 
-            password, 
-            cro, 
-            createdAt,
+        const user = new User({
+            name,
+            email,
+            telephone,
+            password,
+            cro,
+            photo,
             role: req.body.role || 'assistente' // Define role padrão se não for fornecido
         });
 
@@ -52,9 +52,9 @@ exports.createUser = async (req, res) => {
     } catch (err) {
         // 7. Tratamento de erros
         console.error('Erro ao criar usuário:', err.message);
-        res.status(400).json({ 
+        res.status(400).json({
             error: "Erro ao criar usuário. Verifique os dados e tente novamente.",
-            details: err.message 
+            details: err.message
         });
     }
 };
@@ -123,55 +123,58 @@ exports.getOnlyUser = async (req, res) => {
 }
 exports.updateUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const updates = req.body;
-        const currentUser = req.userId; // ID do usuário autenticado
-        const currentUserRole = req.userRole; // Role do usuário autenticado
-
-        // Verifica se o usuário existe
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ error: "Usuário não encontrado." });
+      const { id } = req.params;
+      const { name, email, telephone, cro, photo } = req.body;
+      const currentUserId = req.userId;
+      const currentUserRole = req.userRole;
+  
+      // 1. Verifica existência do usuário
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
+  
+      // 2. Autorização: só o próprio usuário ou admin pode editar
+      if (currentUserId !== user.id && currentUserRole !== 'admin') {
+        return res.status(403).json({ error: 'Acesso não autorizado.' });
+      }
+  
+      // 3. Validação de e-mail único, se for alterado
+      if (email && email !== user.email) {
+        const emailTaken = await User.findOne({ email });
+        if (emailTaken) {
+          return res.status(400).json({ error: 'E-mail já está em uso.' });
         }
-
-        // Autorização: apenas o próprio usuário ou admin pode editar
-        if (currentUser !== id && currentUserRole !== 'admin') {
-            return res.status(403).json({ error: "Acesso não autorizado." });
-        }
-
-        // Validação de e-mail único (se estiver atualizando o e-mail)
-        if (updates.email && updates.email !== user.email) {
-            const existingUser = await User.findOne({ email: updates.email });
-            if (existingUser) {
-                return res.status(400).json({ error: "E-mail já está em uso." });
-            }
-        }
-
-        // Criptografa a nova senha (se estiver atualizando)
-        if (updates.password) {
-            const salt = await bcrypt.genSalt(10);
-            updates.password = await bcrypt.hash(updates.password, salt);
-        }
-
-        // Atualiza o usuário
-        const updatedUser = await User.findByIdAndUpdate(
-            id,
-            { $set: updates },
-            { new: true, runValidators: true } // Retorna o documento atualizado e valida os campos
-        ).select('-password'); // Remove a senha da resposta
-
-        res.status(200).json({
-            message: "Usuário atualizado com sucesso!",
-            user: updatedUser
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            error: "Erro ao atualizar usuário.",
-            details: error.message
-        });
+      }
+  
+      // 4. Monta o objeto de updates somente com campos permitidos
+      const updates = {};
+      if (name)      updates.name      = name;
+      if (email)     updates.email     = email;
+      if (telephone) updates.telephone = telephone;
+      if (cro)       updates.cro       = cro;
+      if (photo)     updates.photo     = photo;
+      updates.updateAt = Date.now();
+  
+      // 5. Executa o update
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $set: updates },
+        { new: true, runValidators: true }
+      ).select('-password'); // remove a senha da resposta
+  
+      return res.status(200).json({
+        message: 'Usuário atualizado com sucesso!',
+        user: updatedUser
+      });
+    } catch (err) {
+      console.error('Erro ao atualizar usuário:', err);
+      return res.status(500).json({
+        error: 'Erro interno ao atualizar usuário.',
+        details: err.message
+      });
     }
-};
+  };
 
 exports.updateUserRole = async (req, res) => {
     try {

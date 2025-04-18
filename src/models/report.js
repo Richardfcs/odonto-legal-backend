@@ -19,11 +19,27 @@ const reportSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Campos adicionais para controle
+  status: {
+    type: String,
+    enum: ['rascunho', 'assinado', 'finalizado'],
+    default: 'rascunho'
+  },
   createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
     type: Date,
     default: Date.now
   }
 });
 
-const Laudo = mongoose.model('Laudo', laudoSchema);
-module.exports = Laudo;
+// Atualiza updatedAt antes de salvar
+reportSchema.pre('save', function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+const Report = mongoose.model('Report', reportSchema);
+module.exports = Report;
