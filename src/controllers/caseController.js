@@ -142,7 +142,10 @@ exports.getCasesByName = async (req, res) => {
             return res.status(400).json({ error: "Nome do caso não fornecido" });
         }
 
-        const cases = await Case.find({ nameCase: { $regex: nameCase, $options: 'i' } });
+        const cases = await Case.find({ nameCase: { $regex: nameCase, $options: 'i' } })
+            .populate('responsibleExpert', 'name email role') // Popula apenas nome, email e role
+            .populate('team', 'name')
+            .populate('evidences');
         if (cases.length === 0) {
             return res.status(404).json({ message: "Nenhum caso encontrado com esse nome" });
         }
@@ -164,7 +167,10 @@ exports.getCasesByStatus = async (req, res) => {
             return res.status(400).json({ error: "Status não fornecido" });
         }
 
-        const cases = await Case.find({ status });
+        const cases = await Case.find({ status })
+            .populate('responsibleExpert', 'name email role') // Popula apenas nome, email e role
+            .populate('team', 'name')
+            .populate('evidences');
         if (cases.length === 0) {
             return res.status(404).json({ message: "Nenhum caso encontrado com esse status" });
         }
@@ -199,7 +205,10 @@ exports.getCasesByData = async (req, res) => {
         // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
         const sortOption = order === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
-        const cases = await Case.find(filter).sort(sortOption);
+        const cases = await Case.find(filter).sort(sortOption)
+            .populate('responsibleExpert', 'name email role') // Popula apenas nome, email e role
+            .populate('team', 'name')
+            .populate('evidences');
 
         if (cases.length === 0) {
             return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
@@ -234,7 +243,10 @@ exports.getCasesByDataCase = async (req, res) => {
         // Ordenação por data (padrão: mais novo primeiro, se order = 'oldest', muda pra mais antigo)
         const sortOption = order === "oldest" ? { dateCase: 1 } : { dateCase: -1 };
 
-        const cases = await Case.find(filter).sort(sortOption);
+        const cases = await Case.find(filter).sort(sortOption)
+            .populate('responsibleExpert', 'name email role') // Popula apenas nome, email e role
+            .populate('team', 'name')
+            .populate('evidences');
 
         if (cases.length === 0) {
             return res.status(404).json({ message: "Nenhum caso encontrado no intervalo de datas fornecido." });
@@ -255,7 +267,10 @@ exports.getCasesByCategory = async (req, res) => {
         const { category } = req.query;
 
 
-        const casosFiltrados = await Case.find({ category });
+        const casosFiltrados = await Case.find({ category })
+            .populate('responsibleExpert', 'name email role') // Popula apenas nome, email e role
+            .populate('team', 'name')
+            .populate('evidences');
 
 
         if (casosFiltrados.length === 0) {

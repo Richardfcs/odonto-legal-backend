@@ -1,41 +1,40 @@
 const mongoose = require('mongoose');
 
 const reportSchema = new mongoose.Schema({
-  caseId: {
+  caseId: { // Referência ao caso que este laudo pertence
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Case',
     required: true
   },
-  content: {
+  content: { // O conteúdo de texto livre do laudo (digitado pelo perito)
     type: String,
     required: true
   },
-  signedBy: {
+  signedBy: { // Referência ao usuário que gerou/assinou o laudo
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  pdfUrl: {
+  pdfUrl: { // URL onde o PDF gerado está salvo (para acesso direto)
     type: String,
     required: true
   },
-  // Campos adicionais para controle
-  status: {
+  status: { // Status do laudo (rascunho, assinado, finalizado)
     type: String,
     enum: ['rascunho', 'assinado', 'finalizado'],
-    default: 'rascunho'
+    default: 'finalizado' // Pode começar como 'finalizado' se for gerado final
   },
-  createdAt: {
+  createdAt: { // Data de criação do registro do laudo
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
-  updatedAt: {
+  updatedAt: { // Data da última atualização (mantido pelo middleware)
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-// Atualiza updatedAt antes de salvar
+// Middleware para atualizar `updatedAt` automaticamente
 reportSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();

@@ -2,6 +2,7 @@ const User = require('../models/user');
 const Case = require('../models/case');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs'); // Importar bcrypt
+const mongoose = require('mongoose'); // Para validação de ObjectId
 
 // Criação da função de criar usuário / Cadastrar usuário
 // para exportar para userRoutes
@@ -237,5 +238,90 @@ exports.getUserWithCases = async (req, res) => {
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};// Importar mongoose se não estiver
+
+// ... (suas outras funções de controller: createUser, getUsers, loginUser, getOnlyUser, updateUser, updateUserRole, deleteUser, getUserWithCases) ...
+
+// --- Nova Função para Filtrar Usuários por Nome ---
+// Rota esperada: GET /api/user/fname?name={name}
+exports.getUsersByName = async (req, res) => {
+    try {
+        const { name } = req.query; // Obtém o termo de busca do query parameter 'name'
+
+        // 1. Validação: Verifica se o termo de busca foi fornecido
+        if (!name || name.trim() === '') {
+            // Se nenhum nome for fornecido, talvez você queira retornar todos os usuários
+            // ou um erro 400. Dependendo da UX, retornar todos pode ser mais útil.
+             // Vamos retornar um 400 indicando que o nome é obrigatório para esta rota de filtro
+            return res.status(400).json({ error: "Nome para pesquisa não fornecido." });
+
+             // --- Alternativa (retornar todos os usuários se a busca for vazia): ---
+             // const allUsers = await User.find().select('-password'); // Exclui a senha
+             // return res.status(200).json(allUsers);
+             // --- Fim Alternativa ---
+        }
+
+        // 2. Busca usuários no banco de dados usando um Regular Expression
+        // { name: { $regex: name, $options: 'i' } } busca documentos onde o campo 'name'
+        // contém o termo de busca (`$regex`), ignorando maiúsculas/minúsculas (`$options: 'i'`).
+        const users = await User.find({ name: { $regex: name, $options: 'i' } })
+                                 .select('-password'); // Exclui o campo de senha da resposta por segurança
+
+        // 3. Verifica se algum usuário foi encontrado
+        if (users.length === 0) {
+            // Retorna 200 com um array vazio e uma mensagem indicando que nada foi encontrado
+            // Isso é mais amigável para o frontend do que um 404 para "não encontrado" na busca
+            return res.status(200).json({ message: "Nenhum funcionário encontrado com esse nome.", users: [] });
+        }
+
+        // 4. Responde com a lista de usuários encontrados
+        res.status(200).json(users); // Retorna o array de usuários encontrados
+        console.log(`Usuários encontrados com o nome: "${name}"`);
+
+    } catch (err) {
+        // 5. Tratamento de erros
+        console.error('Erro ao filtrar usuários por nome:', err);
+        res.status(500).json({
+            error: "Erro interno do servidor ao buscar funcionários por nome.",
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined // Detalhes do erro apenas em dev
+        });
+    }
+};
+
+exports.getMe = async (req, res) => {
+    try {
+        const userId = req.userId; // Obtém o ID do usuário a partir do token (definido pelo middleware verifyJWT)
+
+        // 1. Validação básica do userId
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+             // Isso indica que o middleware de autenticação não funcionou como esperado ou o token é inválido
+            return res.status(401).json({ message: "Usuário autenticado inválido ou não fornecido." });
+        }
+
+        // 2. Busca o usuário no banco de dados
+        // Podemos reutilizar a lógica de popular casos aqui se quisermos exibi-los no perfil.
+        // Reutilizando a lógica de `getUserWithCases` para incluir casos (opcional)
+        const user = await User.findById(userId)
+            .populate('cases', 'nameCase status dateCase category')
+            .select('-password'); // Exclui o campo de senha da resposta por segurança
+
+        // 3. Verifica se o usuário foi encontrado (deve ser encontrado se o token for válido)
+        if (!user) {
+            // Este caso é raro se o middleware verifyJWT funciona, mas é um bom check
+            return res.status(404).json({ message: "Seu perfil de usuário não foi encontrado no sistema." });
+        }
+
+        // 4. Responde com os dados do usuário (excluindo a senha)
+        res.status(200).json(user);
+        console.log(`Perfil do usuário ${user.name} (_id: ${user._id}) acessado.`);
+
+    } catch (error) {
+        // 5. Tratamento de erros
+        console.error('Erro ao obter dados do usuário logado:', error);
+        res.status(500).json({
+            message: "Erro interno do servidor ao buscar seu perfil.",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };

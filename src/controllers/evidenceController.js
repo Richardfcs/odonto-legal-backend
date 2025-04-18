@@ -45,7 +45,8 @@ exports.createEvidence = async (req, res) => {
 exports.getAllEvidences = async (req, res) => {
     try {
         // 1. Buscar todas as evidências no banco de dados
-        const evidences = await Evidence.find({}); // Retorna todas as evidências
+        const evidences = await Evidence.find({}) // Retorna todas as evidências
+            .populate('collectedBy', 'name');
 
         // 2. Responder com sucesso (código 200 - OK) e a lista de evidências
         res.status(200).json({ msg: "Evidências encontradas com sucesso!", evidences: evidences });
@@ -68,7 +69,8 @@ exports.getEvidencesByCaseId = async (req, res) => {
         }
 
         // 3. Buscar evidências no banco de dados FILTRANDO por caseId
-        const evidences = await Evidence.find({ caseId: caseId }); // Filtra evidências pelo caseId
+        const evidences = await Evidence.find({ caseId: caseId })
+            .populate('collectedBy', 'name'); // Filtra evidências pelo caseId
 
         // 4. Verificar se evidências foram encontradas para o caseId
         if (!evidences || evidences.length === 0) {
@@ -104,7 +106,8 @@ exports.updateEvidence = async (req, res) => {
             req.params.id,
             req.body,
             { new: true }
-        );
+        )
+        .populate('collectedBy', 'name');
         res.status(200).json(updatedEvidence);
     } catch (error) {
         res.status(500).json({ error: error.message });
