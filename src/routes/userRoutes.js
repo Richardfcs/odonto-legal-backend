@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { verifyJWT, authorize } = require('../middleware/auth');
-const { createUser, getUsers, updateUserRole, updateUser, loginUser, getOnlyUser, deleteUser, getUserWithCases, getUsersByName, getMe } = require('../controllers/userController');
+const { createUser, getUsers, updateUserRole, updateUser, loginUser, getOnlyUser, deleteUser, getUserWithCases, getUsersByName, getMe, getMyCasesList } = require('../controllers/userController');
 
 router.get('/me', verifyJWT, getMe);
+router.get('/mycases', verifyJWT, getMyCasesList);
 router.get('/fname', verifyJWT, authorize(['admin', 'perito']), getUsersByName);
 // Os métodos e Rotas dos usuários
 router.post('/', verifyJWT, authorize(['admin']), createUser);

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createCase, getCases, getCaseById, updateCase, deleteCase, getCasesByName, getCasesByStatus, getCasesByData, getCasesByDataCase, getCasesByCategory } = require('../controllers/caseController');
+const { createCase, getCases, getCaseById, updateCase, deleteCase, getCasesByName, getCasesByStatus, getCasesByData, getCasesByDataCase, getCasesByCategory, analyzeCaseWithAI } = require('../controllers/caseController');
 const { verifyJWT, authorize } = require('../middleware/auth');
 
 // métodos de filtro (tem que vir antes de /:id sempre)
@@ -15,6 +15,9 @@ router.post('/', verifyJWT, authorize(['admin', 'perito']), createCase);
 router.get('/', verifyJWT, getCases);
 router.get('/:id', verifyJWT, getCaseById);
 router.put('/:id', verifyJWT, authorize(['admin', 'perito']), updateCase);
-router.delete('/:id', verifyJWT, authorize(['admin']), deleteCase);
+router.delete('/:id', verifyJWT, authorize(['admin', 'perito']), deleteCase);
+
+// Rota para análise com IA (POST porque envia dados no corpo)
+router.post('/:caseId/analyze', verifyJWT, authorize(['admin', 'perito']), analyzeCaseWithAI); // Protegida e autorizada
 
 module.exports = router;

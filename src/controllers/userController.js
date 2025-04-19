@@ -1,327 +1,375 @@
+// userController.js
+
 const User = require('../models/user');
 const Case = require('../models/case');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs'); // Importar bcrypt
-const mongoose = require('mongoose'); // Para validação de ObjectId
+const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const AuditLog = require('../models/auditlog'); // <<<--- IMPORTAR O MODELO AuditLog
+
+// Função auxiliar para salvar logs (para evitar repetição)
+// Esta função salva o log e NÃO espera a conclusão (para não atrasar a resposta principal)
+// mas captura e loga erros no salvamento do próprio log.
+const saveAuditLog = (userId, action, targetModel, targetId, details) => {
+    if (!userId) {
+        console.warn(`Tentativa de salvar log sem userId para ação ${action} em ${targetModel}:${targetId}`);
+        // Decide o que fazer: não logar, logar com userId null, etc.
+        // Vamos logar com um ID genérico ou nulo para rastrear a tentativa
+        // userId = mongoose.Types.ObjectId(); // Ou algum placeholder
+        // return; // Ou simplesmente não logue se não tiver usuário
+    }
+    if (!targetId) {
+         console.warn(`Tentativa de salvar log sem targetId para ação ${action} em ${targetModel} por ${userId}`);
+         return; // Não faz sentido logar sem um alvo
+    }
+
+    const log = new AuditLog({
+        userId,
+        action,
+        targetModel,
+        targetId,
+        details
+    });
+
+    log.save().catch(err => {
+        // Loga o erro se falhar ao salvar o AuditLog, mas não quebra a requisição principal
+        console.error(`Falha ao salvar AuditLog (Ação: ${action}, User: ${userId}, Target: ${targetId}):`, err.message);
+    });
+};
 
 // Criação da função de criar usuário / Cadastrar usuário
-// para exportar para userRoutes
 exports.createUser = async (req, res) => {
+    let newUser = null; // Variável para guardar o usuário criado
+    const performingUserId = req.userId; // Usuário que está criando (geralmente admin)
+
     try {
-        // 1. Extrair campos do corpo da requisição
         const { name, email, telephone, password, cro, photo } = req.body;
 
-        // 2. Validação de campos obrigatórios
         if (!name || !email || !telephone || !password || !cro) {
             return res.status(400).json({ error: "Preencha todos os campos obrigatórios." });
         }
 
-        // 3. Verificar se e-mail ou CRO já existem
         const existingUser = await User.findOne({ $or: [{ email }, { cro }] });
         if (existingUser) {
             return res.status(400).json({ error: "E-mail ou CRO já cadastrado." });
         }
 
-        // 4. Criar novo usuário
         const user = new User({
-            name,
-            email,
-            telephone,
-            password,
-            cro,
-            photo,
-            role: req.body.role || 'assistente' // Define role padrão se não for fornecido
+            name, email, telephone, password, cro, photo,
+            role: req.body.role || 'assistente'
         });
 
-        // 5. Salvar usuário (o middleware pré-save já criptografa a senha)
-        await user.save();
+        newUser = await user.save(); // Salva o usuário
 
-        // 6. Resposta de sucesso (sem enviar a senha)
+        // --- LOG de Auditoria ---
+        // Quem criou (performingUserId), qual ação, qual modelo, qual ID foi criado
+        saveAuditLog(performingUserId, 'CREATE_USER', 'User', newUser._id, { createdUserEmail: newUser.email });
+
         res.status(201).json({
             message: "Usuário criado com sucesso!",
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                cro: user.cro
-            }
+            user: { /* ... dados do usuário ... */ }
         });
-
-        console.log(`Usuário criado com sucesso! Novo usuário: ${user.name}`);
+        console.log(`Usuário criado: ${newUser.name} por Usuário ID: ${performingUserId}`);
 
     } catch (err) {
-        // 7. Tratamento de erros
         console.error('Erro ao criar usuário:', err.message);
-        res.status(400).json({
-            error: "Erro ao criar usuário. Verifique os dados e tente novamente.",
-            details: err.message
-        });
+         // --- LOG de Falha ---
+         saveAuditLog(performingUserId, 'CREATE_USER_FAILED', 'User', newUser?._id || req.body.email || 'unknown', { error: err.message, input: req.body });
+        res.status(400).json({ /* ... resposta de erro ... */ });
     }
 };
 
 // Listar todos os usuários
-// para exportar para userRoutes
 exports.getUsers = async (req, res) => {
+    // Geralmente, operações de leitura pura (GET sem parâmetros) não precisam de log de auditoria
+    // a menos que haja um requisito específico de rastrear quem viu a lista.
+    // Se necessário, um log pode ser adicionado aqui.
     try {
-        const users = await User.find();
+        const users = await User.find().select('-password'); // Exclui a senha
         res.status(200).json(users);
-        console.log("Todos os usuários listados!")
+        console.log(`Usuário ID: ${req.userId} listou todos os usuários.`); // Log simples no console
     } catch (err) {
-        res.status(400).json({ error: err.message });
-        console.log("erro ao listar todos os usuários")
+        res.status(500).json({ error: "Erro ao listar usuários.", details: err.message });
     }
 };
 
+// Login do usuário
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
+    let targetUserId = null; // Guardar o ID do usuário que tentou logar
 
-    try { // Envolver o código principal em try...catch para capturar erros iniciais
-        // Verificar se o usuário existe
+    try {
         const user = await User.findOne({ email: email });
+        if (user) targetUserId = user._id; // Guarda o ID se o usuário existe
 
         if (!user) {
-            console.log("Usuário não encontrado!");
-            return res.status(404).json({ msg: "Usuário não encontrado!" }); // <--- ADICIONE 'return'
+            // --- LOG de Falha ---
+            saveAuditLog(targetUserId || email, 'LOGIN_FAIL', 'User', targetUserId || email, { reason: 'User not found', emailAttempt: email });
+            return res.status(404).json({ msg: "Usuário não encontrado!" });
         }
 
-        // Verificar se a senha coincide usando bcrypt.compare()
-        const checkPassword = await bcrypt.compare(password, user.password); // Comparar a senha fornecida com o hash armazenado
-
-        if (!checkPassword) { // Verificar o resultado booleano de bcrypt.compare()
-            return res.status(422).json({ msg: "Senha inválida" }); // <--- ADICIONE 'return'
+        const checkPassword = await bcrypt.compare(password, user.password);
+        if (!checkPassword) {
+             // --- LOG de Falha ---
+             saveAuditLog(targetUserId, 'LOGIN_FAIL', 'User', targetUserId, { reason: 'Invalid password', emailAttempt: email });
+            return res.status(422).json({ msg: "Senha inválida" });
         }
 
         const secret = process.env.SECRET;
+        const token = jwt.sign( { id: user._id, role: user.role }, secret, { expiresIn: '1h' });
 
-        const token = jwt.sign(
-            {
-                id: user._id,
-                role: user.role // Adicione a role do usuário
-            },
-            secret,
-            { expiresIn: '1h' }
-        );
-        console.log("Valor de process.env.SECRET:", secret);
+         // --- LOG de Sucesso ---
+         saveAuditLog(targetUserId, 'LOGIN_SUCCESS', 'User', targetUserId, { email: user.email });
+
         console.log("Token JWT Gerado:", token);
-        return res.status(200).json({ msg: "Autenticação realizada com sucesso!", token }); // <--- ADICIONE 'return'
+        return res.status(200).json({ msg: "Autenticação realizada com sucesso!", token, role: user.role });
     } catch (error) {
-        console.error("Erro durante o login:", error); // Log do erro para debug
-        return res.status(500).json({ msg: "Erro interno no servidor.", error: error.message }); // <--- ADICIONE 'return' e envie mensagem de erro mais informativa
+        console.error("Erro durante o login:", error);
+         // --- LOG de Falha Genérico ---
+         saveAuditLog(targetUserId || email, 'LOGIN_FAIL', 'User', targetUserId || email, { reason: 'Server error', error: error.message, emailAttempt: email });
+        return res.status(500).json({ msg: "Erro interno no servidor.", error: error.message });
     }
 };
 
+// Obter um usuário específico
 exports.getOnlyUser = async (req, res) => {
+    // Leitura de um único registro específico - geralmente não precisa de log de auditoria,
+    // a menos que o acesso a perfis de usuário seja sensível.
     try {
         const user = await User.findById(req.params.id)
-            .populate('cases', 'nameCase status'); // Popula os casos do usuário
+            .populate('cases', 'nameCase status')
+            .select('-password');
 
         if (!user) return res.status(404).json({ msg: "Usuário não encontrado!" });
+
+        // Opcional: Logar quem viu qual perfil
+        // saveAuditLog(req.userId, 'VIEW_USER_PROFILE', 'User', user._id);
+
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ msg: error.message });
     }
 }
+
+// Atualizar dados básicos do usuário
 exports.updateUser = async (req, res) => {
+    const targetUserId = req.params.id;
+    const performingUserId = req.userId;
+
     try {
-      const { id } = req.params;
       const { name, email, telephone, cro, photo } = req.body;
-      const currentUserId = req.userId;
       const currentUserRole = req.userRole;
-  
-      // 1. Verifica existência do usuário
-      const user = await User.findById(id);
-      if (!user) {
+
+      const userToUpdate = await User.findById(targetUserId);
+      if (!userToUpdate) {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
-  
-      // 2. Autorização: só o próprio usuário ou admin pode editar
-      if (currentUserId !== user.id && currentUserRole !== 'admin') {
+
+      // Autorização: admin ou o próprio usuário
+      // Nota: A lógica de autorização deve preferencialmente estar no middleware 'authorize' se possível,
+      // mas uma verificação dupla aqui é aceitável para lógica específica.
+      if (performingUserId !== targetUserId && currentUserRole !== 'admin') {
         return res.status(403).json({ error: 'Acesso não autorizado.' });
       }
-  
-      // 3. Validação de e-mail único, se for alterado
-      if (email && email !== user.email) {
-        const emailTaken = await User.findOne({ email });
+
+      // Validação de e-mail único
+      if (email && email !== userToUpdate.email) {
+        const emailTaken = await User.findOne({ email: email });
         if (emailTaken) {
           return res.status(400).json({ error: 'E-mail já está em uso.' });
         }
       }
-  
-      // 4. Monta o objeto de updates somente com campos permitidos
+
+      // Objeto de updates (apenas campos permitidos e fornecidos)
       const updates = {};
-      if (name)      updates.name      = name;
-      if (email)     updates.email     = email;
-      if (telephone) updates.telephone = telephone;
-      if (cro)       updates.cro       = cro;
-      if (photo)     updates.photo     = photo;
+      const originalData = {}; // Opcional: para logar dados antigos
+      if (name && name !== userToUpdate.name) { updates.name = name; originalData.name = userToUpdate.name; }
+      if (email && email !== userToUpdate.email) { updates.email = email; originalData.email = userToUpdate.email; }
+      if (telephone && telephone !== userToUpdate.telephone) { updates.telephone = telephone; originalData.telephone = userToUpdate.telephone; }
+      if (cro && cro !== userToUpdate.cro) { updates.cro = cro; originalData.cro = userToUpdate.cro; }
+      if (photo !== undefined && photo !== userToUpdate.photo) { updates.photo = photo; /* Não logamos foto base64 inteira */ }
       updates.updateAt = Date.now();
-  
-      // 5. Executa o update
+
+       // Se não houver campos a atualizar (exceto updateAt)
+      if (Object.keys(updates).length <= 1) {
+           return res.status(200).json({ message: 'Nenhuma alteração detectada.', user: userToUpdate.select('-password') });
+      }
+
+      // Executa o update
       const updatedUser = await User.findByIdAndUpdate(
-        id,
+        targetUserId,
         { $set: updates },
-        { new: true, runValidators: true }
-      ).select('-password'); // remove a senha da resposta
-  
+        { new: true, runValidators: true } // Retorna o documento atualizado e roda validadores
+      ).select('-password'); // Exclui a senha da resposta
+
+      // --- LOG de Auditoria ---
+      saveAuditLog(performingUserId, 'UPDATE_USER', 'User', updatedUser._id, { changes: updates, previous: originalData });
+
       return res.status(200).json({
         message: 'Usuário atualizado com sucesso!',
         user: updatedUser
       });
     } catch (err) {
       console.error('Erro ao atualizar usuário:', err);
-      return res.status(500).json({
-        error: 'Erro interno ao atualizar usuário.',
-        details: err.message
-      });
+       // --- LOG de Falha ---
+       saveAuditLog(performingUserId, 'UPDATE_USER_FAILED', 'User', targetUserId, { error: err.message, input: req.body });
+      return res.status(500).json({ /* ... resposta de erro ... */ });
     }
   };
 
+// Atualizar a role do usuário
 exports.updateUserRole = async (req, res) => {
-    try {
-        const { _id, role } = req.body;
+    // A rota usa PATCH :id, então pegamos o ID dos parâmetros
+    const targetUserId = req.params.id;
+    const { role } = req.body; // Pega a nova role do corpo da requisição
+    const performingUserId = req.userId; // Usuário que está fazendo a alteração (admin)
 
-        // Validação básica: verifica se a role informada é válida
+    try {
         const validRoles = ['admin', 'perito', 'assistente'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ message: 'Role inválida. Role permitida: admin, perito ou assistente.' });
+        if (!role || !validRoles.includes(role)) { // Verifica se a role foi enviada e é válida
+            return res.status(400).json({ message: 'Nova role inválida ou não fornecida. Roles permitidas: admin, perito, assistente.' });
+        }
+
+        // Busca o usuário para verificar a role antiga
+        const userToUpdate = await User.findById(targetUserId);
+        if (!userToUpdate) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+        const oldRole = userToUpdate.role; // Guarda a role antiga para o log
+
+        // Verifica se a role realmente mudou
+        if (oldRole === role) {
+             return res.status(200).json({ message: 'A role fornecida é a mesma role atual do usuário.', user: userToUpdate.select('-password') });
         }
 
         // Atualiza apenas o campo "role" do usuário
-        const user = await User.findByIdAndUpdate(
-            _id,
-            { role },
-            { new: true }  // retorna o documento atualizado
-        );
+        const updatedUser = await User.findByIdAndUpdate(
+            targetUserId,
+            { role: role, updateAt: Date.now() }, // Atualiza role e timestamp
+            { new: true, runValidators: true } // Retorna o documento atualizado
+        ).select('-password'); // Exclui a senha
 
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado.' });
-        }
 
-        return res.status(200).json({ message: 'Role atualizada com sucesso.', user });
+        // --- LOG de Auditoria ---
+        saveAuditLog(performingUserId, 'UPDATE_USER_ROLE', 'User', updatedUser._id, { newRole: updatedUser.role, previousRole: oldRole });
+
+
+        return res.status(200).json({ message: 'Role atualizada com sucesso.', user: updatedUser });
     } catch (error) {
         console.error('Erro ao atualizar a role do usuário:', error);
+         // --- LOG de Falha ---
+         saveAuditLog(performingUserId, 'UPDATE_USER_ROLE_FAILED', 'User', targetUserId, { error: error.message, requestedRole: role });
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
+
+// Deletar usuário
 exports.deleteUser = async (req, res) => {
+    const targetUserId = req.params.id;
+    const performingUserId = req.userId;
+    let deletedUserName = 'unknown'; // Para o log
+
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        // Encontra e deleta o usuário
+        const user = await User.findByIdAndDelete(targetUserId);
         if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
-        // Remova o usuário dos casos vinculados
+
+        deletedUserName = user.name; // Guarda o nome para o log
+
+        // Opcional: Remover o usuário de casos vinculados (sua lógica existente)
         await Case.updateMany(
             { $or: [{ responsibleExpert: user._id }, { team: user._id }] },
             { $pull: { responsibleExpert: user._id, team: user._id } }
         );
+
+         // --- LOG de Auditoria ---
+         saveAuditLog(performingUserId, 'DELETE_USER', 'User', user._id, { deletedUserName: deletedUserName, deletedUserEmail: user.email });
+
         res.status(200).json({ message: "Usuário excluído com sucesso." });
+        console.log(`Usuário "${deletedUserName}" (_id: ${user._id}) excluído por Usuário ID: ${performingUserId}`);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Erro ao excluir usuário:', error);
+         // --- LOG de Falha ---
+         saveAuditLog(performingUserId, 'DELETE_USER_FAILED', 'User', targetUserId, { error: error.message, deletedUserNameAttempt: deletedUserName });
+        res.status(500).json({ error: "Erro ao excluir usuário.", details: error.message });
     }
 };
 
+// Obter usuário com casos populados
 exports.getUserWithCases = async (req, res) => {
+    // Leitura - geralmente não precisa de log de auditoria
     try {
-        const user = await User.findById(req.params.id) // Usando req.params.id
+        const user = await User.findById(req.params.id)
             .populate({
                 path: 'cases',
                 select: 'nameCase status responsibleExpert',
-                populate: {
-                    path: 'responsibleExpert',
-                    select: 'name role'
-                }
-            });
+                populate: { path: 'responsibleExpert', select: 'name role' }
+            })
+            .select('-password');
 
-        if (!user) {
-            return res.status(404).json({ error: "Usuário não encontrado." });
-        }
-
+        if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-};// Importar mongoose se não estiver
+};
 
-// ... (suas outras funções de controller: createUser, getUsers, loginUser, getOnlyUser, updateUser, updateUserRole, deleteUser, getUserWithCases) ...
-
-// --- Nova Função para Filtrar Usuários por Nome ---
-// Rota esperada: GET /api/user/fname?name={name}
-exports.getUsersByName = async (req, res) => {
+// Obter lista de casos do usuário logado
+exports.getMyCasesList = async (req, res) => {
+    // Leitura - geralmente não precisa de log de auditoria
     try {
-        const { name } = req.query; // Obtém o termo de busca do query parameter 'name'
-
-        // 1. Validação: Verifica se o termo de busca foi fornecido
-        if (!name || name.trim() === '') {
-            // Se nenhum nome for fornecido, talvez você queira retornar todos os usuários
-            // ou um erro 400. Dependendo da UX, retornar todos pode ser mais útil.
-             // Vamos retornar um 400 indicando que o nome é obrigatório para esta rota de filtro
-            return res.status(400).json({ error: "Nome para pesquisa não fornecido." });
-
-             // --- Alternativa (retornar todos os usuários se a busca for vazia): ---
-             // const allUsers = await User.find().select('-password'); // Exclui a senha
-             // return res.status(200).json(allUsers);
-             // --- Fim Alternativa ---
+        const userId = req.userId;
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+             return res.status(401).json({ message: "Usuário autenticado inválido ou não fornecido." });
         }
+        const myCases = await Case.find({ $or: [{ responsibleExpert: userId }, { team: userId }] })
+            .populate('responsibleExpert', 'name role')
+            .select('nameCase Description status location dateCase hourCase category');
 
-        // 2. Busca usuários no banco de dados usando um Regular Expression
-        // { name: { $regex: name, $options: 'i' } } busca documentos onde o campo 'name'
-        // contém o termo de busca (`$regex`), ignorando maiúsculas/minúsculas (`$options: 'i'`).
-        const users = await User.find({ name: { $regex: name, $options: 'i' } })
-                                 .select('-password'); // Exclui o campo de senha da resposta por segurança
-
-        // 3. Verifica se algum usuário foi encontrado
-        if (users.length === 0) {
-            // Retorna 200 com um array vazio e uma mensagem indicando que nada foi encontrado
-            // Isso é mais amigável para o frontend do que um 404 para "não encontrado" na busca
-            return res.status(200).json({ message: "Nenhum funcionário encontrado com esse nome.", users: [] });
-        }
-
-        // 4. Responde com a lista de usuários encontrados
-        res.status(200).json(users); // Retorna o array de usuários encontrados
-        console.log(`Usuários encontrados com o nome: "${name}"`);
-
-    } catch (err) {
-        // 5. Tratamento de erros
-        console.error('Erro ao filtrar usuários por nome:', err);
-        res.status(500).json({
-            error: "Erro interno do servidor ao buscar funcionários por nome.",
-            details: process.env.NODE_ENV === 'development' ? err.message : undefined // Detalhes do erro apenas em dev
-        });
+        res.status(200).json(myCases);
+    } catch (error) {
+        console.error('Erro ao obter lista de casos do usuário logado:', error);
+        res.status(500).json({ /* ... resposta de erro ... */ });
     }
 };
 
+// Obter usuário logado (perfil)
 exports.getMe = async (req, res) => {
+     // Leitura - geralmente não precisa de log de auditoria
     try {
-        const userId = req.userId; // Obtém o ID do usuário a partir do token (definido pelo middleware verifyJWT)
-
-        // 1. Validação básica do userId
+        const userId = req.userId;
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-             // Isso indica que o middleware de autenticação não funcionou como esperado ou o token é inválido
             return res.status(401).json({ message: "Usuário autenticado inválido ou não fornecido." });
         }
-
-        // 2. Busca o usuário no banco de dados
-        // Podemos reutilizar a lógica de popular casos aqui se quisermos exibi-los no perfil.
-        // Reutilizando a lógica de `getUserWithCases` para incluir casos (opcional)
         const user = await User.findById(userId)
             .populate('cases', 'nameCase status dateCase category')
-            .select('-password'); // Exclui o campo de senha da resposta por segurança
-
-        // 3. Verifica se o usuário foi encontrado (deve ser encontrado se o token for válido)
+            .select('-password');
         if (!user) {
-            // Este caso é raro se o middleware verifyJWT funciona, mas é um bom check
             return res.status(404).json({ message: "Seu perfil de usuário não foi encontrado no sistema." });
         }
-
-        // 4. Responde com os dados do usuário (excluindo a senha)
         res.status(200).json(user);
-        console.log(`Perfil do usuário ${user.name} (_id: ${user._id}) acessado.`);
-
     } catch (error) {
-        // 5. Tratamento de erros
         console.error('Erro ao obter dados do usuário logado:', error);
-        res.status(500).json({
-            message: "Erro interno do servidor ao buscar seu perfil.",
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        res.status(500).json({ /* ... resposta de erro ... */ });
+    }
+};
+
+// Filtrar usuários por nome
+exports.getUsersByName = async (req, res) => {
+     // Leitura - geralmente não precisa de log de auditoria
+    try {
+        const { name } = req.query;
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ error: "Nome para pesquisa não fornecido." });
+        }
+        const users = await User.find({ name: { $regex: name, $options: 'i' } })
+                                 .select('-password');
+        if (users.length === 0) {
+            return res.status(200).json({ message: "Nenhum funcionário encontrado com esse nome.", users: [] });
+        }
+        res.status(200).json(users);
+    } catch (err) {
+        console.error('Erro ao filtrar usuários por nome:', err);
+        res.status(500).json({ /* ... resposta de erro ... */ });
     }
 };

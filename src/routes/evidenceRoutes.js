@@ -6,7 +6,7 @@ const { createEvidence, getAllEvidences, getEvidencesByCaseId, updateEvidence, d
 // Os métodos e Rotas das evidências
 router.post('/', verifyJWT, authorize(['admin', 'perito']), createEvidence);
 router.get('/', verifyJWT, getAllEvidences);
-router.get('/:caseId', verifyJWT, authorize(['admin', 'perito']), getEvidencesByCaseId);
+router.get('/:caseId', verifyJWT, getEvidencesByCaseId);
 router.put('/:id', verifyJWT, authorize(['admin', 'perito']), updateEvidence)
 router.delete('/:id', verifyJWT, authorize(['admin', 'perito']), deleteEvidence)
 

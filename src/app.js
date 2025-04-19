@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoutes'); // para pegar todas as rotas
 const caseRoutes = require('./routes/caseRoutes'); // para pegar todos os casos
 const evidenceRoutes = require('./routes/evidenceRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const auditLogRoutes = require('./routes/auditlogRoutes');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config(); // para usar as variáveis que ficam no .env
@@ -50,4 +51,5 @@ app.use('/api/user', userRoutes);
 app.use('/api/case', caseRoutes);
 app.use('/api/evidence', evidenceRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/api/auditlog', auditLogRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
