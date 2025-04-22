@@ -126,7 +126,7 @@ A API estará rodando em `http://localhost:PORTA` (ex: 3000).
     | :------ | :----------------- | :--------------------------------- | :----------------- | :-------------------- |
     | `POST`  | `/`                | Gera um novo laudo em PDF          | Admin, Perito      | Sim                   |
     | `GET`   | `/download/:reportId`| Faz download do PDF de um laudo | Admin, Perito, Assistente | Sim                   |
-    | *(GET /* | `/`                | Lista registros de laudo          | *(Não implementado)* | *Sim*                 |
+    | *GET /* | `/`                | Lista registros de laudo          | *(Não implementado)* | *Sim*                 |
     | *GET /* | `/:id`             | Obtém registro de laudo           | *(Não implementado)* | *Sim*                 |
     | *DELETE*| `/:id`             | Exclui registro/PDF de laudo     | *(Não implementado)* | *Admin*               |
 
@@ -137,7 +137,7 @@ A API estará rodando em `http://localhost:PORTA` (ex: 3000).
     | Método | Rota     | Ação                                   | Acesso Permitido | Necessita Auth (JWT)? |
     | :----- | :------- | :------------------------------------- | :--------------- | :-------------------- |
     | `GET`  | `/`      | Lista logs de auditoria com paginação | Admin            | Sim                   |
-    | *(GET* | `/:id`   | Obtém um log específico               | *(Não implementado)* | *Admin*           |
+    | *GET* | `/:id`   | Obtém um log específico               | *(Não implementado)* | *Admin*           |
 
 ---
 
