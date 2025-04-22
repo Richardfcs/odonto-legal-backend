@@ -1,4 +1,3 @@
-// models/auditLog.js
 const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema({

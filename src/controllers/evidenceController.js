@@ -60,23 +60,34 @@ exports.createEvidence = async (req, res) => {
             { $push: { evidences: newEvidence._id } }
         );
 
-        // Opcional: Popula o coletor antes de retornar, se necessário
         const populatedEvidence = await Evidence.findById(newEvidence._id).populate('collectedBy', 'name');
 
         // --- LOG de Auditoria ---
-        saveAuditLog(performingUserId, 'CREATE_EVIDENCE', 'Evidence', newEvidence._id, { evidenceTitle: newEvidence.title, caseId: newEvidence.caseId });
+        const logDetails = {
+            evidenceTitle: newEvidence.title,
+            evidenceType: newEvidence.evidenceType,
+            caseId: newEvidence.caseId
+        };
+        if (newEvidence.evidenceType === 'image') {
+            logDetails.data = '[Image Data (Base64 Skipped)]'; // Placeholder
+        } else {
+             logDetails.data = typeof data === 'string' && data.length > 200 ? data.substring(0, 200) + '...' : data;
+        }
+        saveAuditLog(performingUserId, 'CREATE_EVIDENCE', 'Evidence', newEvidence._id, logDetails);
+        // --- Fim LOG ---
 
-        // Responde com sucesso
         res.status(201).json({ msg: "Evidência criada com sucesso!", evidence: populatedEvidence });
-        console.log(`Evidência "${newEvidence.title}" criada por Usuário ID: ${performingUserId} para o Caso ID: ${caseId}`);
-
     } catch (error) {
-        console.error("Erro ao criar evidência:", error.message);
-        // --- LOG de Falha ---
-        saveAuditLog(performingUserId, 'CREATE_EVIDENCE_FAILED', 'Evidence', newEvidence?._id || req.body.title || 'unknown', { error: error.message, caseId: req.body.caseId, input: req.body });
-        res.status(500).json({ msg: "Erro ao criar evidência.", error: error.message });
-    }
-};
+        // --- LOG de Falha  ---
+        const failureDetails = {
+            error: error.message,
+            caseId: caseId,
+            evidenceType: evidenceType,
+            evidenceTitle: title
+       };
+       saveAuditLog(performingUserId, 'CREATE_EVIDENCE_FAILED', 'Evidence', newEvidence?._id || title || 'unknown', failureDetails);
+       res.status(500).json({ msg: "Erro ao criar evidência.", error: error.message });
+}};
 
 // Listar todas as evidências (GERAL - não por caso)
 exports.getAllEvidences = async (req, res) => {
@@ -188,17 +199,34 @@ exports.updateEvidence = async (req, res) => {
              return res.status(404).json({ error: "Evidência não encontrada para atualização." });
          }
 
-        // --- LOG de Auditoria ---
-        // Se você buscou oldEvidence, pode comparar e logar apenas as mudanças
-        saveAuditLog(performingUserId, 'UPDATE_EVIDENCE', 'Evidence', updatedEvidence._id, { changes: req.body, caseId: updatedEvidence.caseId });
+        // --- LOG de Auditoria  ---
+        const logDetails = {
+            caseId: updatedEvidence.caseId,
+            changes: { ...updateData } 
+       };
+       if (logDetails.changes.data && updatedEvidence.evidenceType === 'image' && typeof logDetails.changes.data === 'string' && logDetails.changes.data.startsWith('data:image')) {
+            logDetails.changes.data = '[Image Data (Base64 Skipped)]';
+       } else if (logDetails.changes.data && typeof logDetails.changes.data === 'string' && logDetails.changes.data.length > 200) {
+             logDetails.changes.data = logDetails.changes.data.substring(0, 200) + '...';
+       }
 
-        res.status(200).json(updatedEvidence);
+       saveAuditLog(performingUserId, 'UPDATE_EVIDENCE', 'Evidence', updatedEvidence._id, logDetails);
+       // --- Fim LOG ---
+
+       res.status(200).json(updatedEvidence);
         console.log(`Evidência "${updatedEvidence.title}" atualizada por Usuário ID: ${performingUserId}`);
 
     } catch (error) {
         console.error("Erro ao atualizar evidência:", error.message);
          // --- LOG de Falha ---
-         saveAuditLog(performingUserId, 'UPDATE_EVIDENCE_FAILED', 'Evidence', evidenceId, { error: error.message, input: req.body });
+         const failureDetails = {
+              error: error.message,
+              inputChanges: { ...updateData }
+         };
+         if (failureDetails.inputChanges.data && typeof failureDetails.inputChanges.data === 'string' && failureDetails.inputChanges.data.startsWith('data:image')) {
+              failureDetails.inputChanges.data = '[Image Data Attempted (Base64 Skipped)]';
+         }
+        saveAuditLog(performingUserId, 'UPDATE_EVIDENCE_FAILED', 'Evidence', evidenceId, failureDetails);
         res.status(500).json({ error: "Erro ao atualizar evidência.", details: error.message });
     }
 };
