@@ -126,9 +126,9 @@ A API estará rodando em `http://localhost:PORTA` (ex: 3000).
     | :------ | :----------------- | :--------------------------------- | :----------------- | :-------------------- |
     | `POST`  | `/`                | Gera um novo laudo em PDF          | Admin, Perito      | Sim                   |
     | `GET`   | `/download/:reportId`| Faz download do PDF de um laudo | Admin, Perito, Assistente | Sim                   |
-    | *GET /* | `/`                | Lista registros de laudo          | *(Não implementado)* | *Sim*                 |
-    | *GET /* | `/:id`             | Obtém registro de laudo           | *(Não implementado)* | *Sim*                 |
-    | *DELETE*| `/:id`             | Exclui registro/PDF de laudo     | *(Não implementado)* | *Admin*               |
+    | `GET`   | `/`                | Lista registros de laudo          | *(Não implementado)* | *Sim*                 |
+    | `GET`   | `/:id`             | Obtém registro de laudo           | *(Não implementado)* | *Sim*                 |
+    | `DELETE`| `/:id`             | Exclui registro/PDF de laudo     | *(Não implementado)* | *Admin*               |
 
 ---
 
@@ -137,14 +137,14 @@ A API estará rodando em `http://localhost:PORTA` (ex: 3000).
     | Método | Rota     | Ação                                   | Acesso Permitido | Necessita Auth (JWT)? |
     | :----- | :------- | :------------------------------------- | :--------------- | :-------------------- |
     | `GET`  | `/`      | Lista logs de auditoria com paginação | Admin            | Sim                   |
-    | *GET* | `/:id`   | Obtém um log específico               | *(Não implementado)* | *Admin*           |
+    | `GET`  | `/:id`   | Obtém um log específico               | *(Não implementado)* | *Admin*           |
 
 ---
 
 ## Diagrama do Banco de Dados (Conceitual)
 
 *   **User:** Contém informações do usuário (nome, email, senha hash, role, cro, foto). Possui referência aos `Cases` dos quais é responsável ou membro da equipe.
-*   **Case:** Contém informações do caso pericial (nome, descrição, status, local, data, etc.). Possui referência ao `User` responsável (`responsibleExpert`), um array de referências aos `User`s da equipe (`team`), e um array de referências às `Evidence`s associadas.
+*   **Case:** Contém informações do caso pericial (nome, descrição, status, local, data, etc.). Possui referência ao `User` responsável (`responsibleExpert`), um array de referências aos `Users` da equipe (`team`), e um array de referências às `Evidences` associadas.
 *   **Evidence:** Contém informações da evidência (tipo, título, descrição, dados, categoria). Possui referência ao `Case` ao qual pertence (`caseId`) e ao `User` que a coletou/registrou (`collectedBy`).
 *   **Report:** Contém metadados do laudo gerado (conteúdo textual, URL do PDF). Possui referência ao `Case` ao qual pertence (`caseId`) e ao `User` que o assinou/gerou (`signedBy`).
 *   **AuditLog:** Contém registros das ações realizadas no sistema. Possui referência ao `User` que realizou a ação (`userId`) e informações sobre a ação e o alvo (`action`, `targetModel`, `targetId`, `details`).
