@@ -61,10 +61,18 @@ exports.createCase = async (req, res) => {
 
         newCase = await caseInstance.save(); // Salva o caso
 
-        // Atualiza os usuários vinculados
-        await User.findByIdAndUpdate(responsibleExpert, { $push: { cases: newCase._id } });
-        if (team && team.length > 0) {
-            await User.updateMany({ _id: { $in: team } }, { $push: { cases: newCase._id } });
+        // 1. Adiciona ao responsável (garantido não duplicar)
+        await User.findByIdAndUpdate(
+            responsibleExpert,
+            { $addToSet: { cases: newCase._id } } // Usa $addToSet
+        );
+
+        // 2. Adiciona à equipe (garantido não duplicar, mesmo que o responsável esteja aqui)
+        if (teamIds.length > 0) {
+            await User.updateMany(
+                { _id: { $in: teamIds } },
+                { $addToSet: { cases: newCase._id } } // Usa $addToSet
+            );
         }
 
         // --- LOG de Auditoria ---
