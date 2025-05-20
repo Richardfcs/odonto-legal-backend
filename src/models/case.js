@@ -95,7 +95,9 @@ caseSchema.post('save', async function (doc) {
   }
 });
 
-
+caseSchema.index({ createdAt: 1 });
+caseSchema.index({ status: 1 });
+caseSchema.index({ category: 1 });
 
 const Case = mongoose.model("Case", caseSchema);
 

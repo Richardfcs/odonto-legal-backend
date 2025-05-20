@@ -8,6 +8,7 @@ const caseRoutes = require('./routes/caseRoutes'); // para pegar todos os casos
 const evidenceRoutes = require('./routes/evidenceRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const auditLogRoutes = require('./routes/auditlogRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config(); // para usar as variáveis que ficam no .env
@@ -20,7 +21,7 @@ const app = express();
 connectDB();
 
 // Middleware (interceptador de dados)
-app.use(cors());
+app.use(cors({exposedHeaders: ['Content-Disposition']}));
 app.use(bodyParser.json({ limit: '50mb' })); //Colocando um limite de dados de 50mb
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })) // Para dados enviados via URL
 app.use(express.static('public'));
@@ -53,3 +54,4 @@ app.use('/api/evidence', evidenceRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/auditlog', auditLogRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/dashboard', dashboardRoutes);

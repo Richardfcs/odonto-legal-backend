@@ -6,7 +6,6 @@ const AuditLog = require('../models/auditlog');
 const axios = require('axios'); // Importar Axios
 
 // caseController.js
-// ... imports ...
 
 // Função auxiliar para salvar logs (copiada ou importada de utils/auditLogger.js)
 const saveAuditLog = (userId, action, targetModel, targetId, details) => {

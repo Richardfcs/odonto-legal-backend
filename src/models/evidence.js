@@ -41,5 +41,8 @@ const evidenceSchema = new mongoose.Schema({
     }
 });
 
+evidenceSchema.index({ createdAt: 1 });
+evidenceSchema.index({ category: 1 });
+
 const Evidence = mongoose.model('Evidence', evidenceSchema);
 module.exports = Evidence;
