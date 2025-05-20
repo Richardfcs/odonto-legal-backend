@@ -324,6 +324,7 @@ exports.getMyCasesList = async (req, res) => {
         }
         const myCases = await Case.find({ $or: [{ responsibleExpert: userId }, { team: userId }] })
             .populate('responsibleExpert', 'name role')
+            .populate('team', 'name role')
             .select('nameCase Description status location dateCase hourCase category');
 
         res.status(200).json(myCases);
@@ -354,22 +355,48 @@ exports.getMe = async (req, res) => {
     }
 };
 
-// Filtrar usuários por nome
+// Pesquisar usuários por nome (ou parte do nome)
 exports.getUsersByName = async (req, res) => {
-    // Leitura - geralmente não precisa de log de auditoria
     try {
-        const { name } = req.query;
+        const { name, role } = req.query; // Pega 'name' e opcionalmente 'role' da query string
+
         if (!name || name.trim() === '') {
-            return res.status(400).json({ error: "Nome para pesquisa não fornecido." });
+            // Retornar um array vazio é uma opção em vez de 400, dependendo da preferência
+            return res.status(400).json({ error: "Parâmetro 'name' para pesquisa não fornecido ou está vazio." });
         }
-        const users = await User.find({ name: { $regex: name, $options: 'i' } })
-            .select('-password');
+
+        // Constrói o objeto de filtro para a query do MongoDB
+        const filter = {
+            name: { $regex: name.trim(), $options: 'i' } // 'i' para case-insensitive
+        };
+
+        // Se um 'role' específico for fornecido na query, adiciona ao filtro
+        if (role && ['admin', 'perito', 'assistente'].includes(role)) {
+            filter.role = role;
+        }
+        // Você também poderia adicionar um filtro para buscar por CRO se 'name' for um número ou padrão de CRO
+         if (/\d/.test(name.trim())) { // Se 'name' contiver números
+            filter.$or = [
+                { name: { $regex: name.trim(), $options: 'i' } },
+                { cro: { $regex: name.trim(), $options: 'i' } } // Busca por CRO também
+            ];
+            delete filter.name; // Remove o filtro de nome individual se $or for usado
+        }
+
+        // Busca usuários que correspondem ao filtro
+        const users = await User.find(filter).select('-password');
+
         if (users.length === 0) {
-            return res.status(200).json({ message: "Nenhum funcionário encontrado com esse nome.", users: [] });
+            // Retorna 200 com uma mensagem e array vazio, o que é comum para buscas sem resultado
+            return res.status(200).json({ message: "Nenhum usuário encontrado com os critérios fornecidos.", users: [] });
         }
-        res.status(200).json(users);
+
+        res.status(200).json(users); // Retorna o array de usuários encontrados
+         console.log(`Usuários encontrados com o nome/termo: "${name}"${role ? ` e role: "${role}"` : ''}`);
+
     } catch (err) {
-        console.error('Erro ao filtrar usuários por nome:', err);
-        res.status(500).json({ /* ... resposta de erro ... */ });
+        console.error("Erro ao filtrar usuários por nome:", err);
+        // Em caso de erro de servidor, é melhor retornar um status 500
+        res.status(500).json({ error: "Erro interno do servidor ao buscar usuários.", details: err.message });
     }
 };

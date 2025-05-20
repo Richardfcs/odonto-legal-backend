@@ -23,10 +23,13 @@ const auditLogSchema = new mongoose.Schema({
             'CREATE_CASE',              // Criação bem-sucedida de um caso
             'UPDATE_CASE',              // Atualização bem-sucedida de um caso
             'DELETE_CASE',              // Exclusão bem-sucedida de um caso
+            'ADD_TEAM_MEMBER',
+            'REMOVE_TEAM_MEMBER',
             // Ações de Falha (Caso)
             'CREATE_CASE_FAILED',       // Tentativa falha de criar caso
             'UPDATE_CASE_FAILED',       // Tentativa falha de atualizar caso
             'DELETE_CASE_FAILED',       // Tentativa falha de excluir caso
+            'REMOVE_TEAM_MEMBER_FAILED',
 
             // ---- Ações de Evidência ----
             'CREATE_EVIDENCE',          // Criação bem-sucedida de uma evidência

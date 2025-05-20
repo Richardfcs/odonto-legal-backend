@@ -7,6 +7,8 @@ const Evidence = require('../models/evidence');
 const Report = require('../models/report')
 const { Parser } = require('json2csv');
 const moment = require('moment');
+const { verifyJWT, authorize } = require('../middleware/auth');
+
 
 const {
     startOfToday,
@@ -62,7 +64,7 @@ const createDateFilter = (period, customStart, customEnd) => {
 };
 
 // Rota principal de estatísticas
-router.get('/main-stats', async (req, res) => {
+router.get('/main-stats',verifyJWT , authorize(['admin']), async (req, res) => {
     try {
         const dateFilter = createDateFilter(
             req.query.period,
@@ -100,7 +102,7 @@ router.get('/main-stats', async (req, res) => {
 });
 
 // Estatísticas de casos aprimoradas
-router.get('/case-stats', async (req, res) => {
+router.get('/case-stats', verifyJWT, authorize(['admin']), async (req, res) => {
     try {
         const { type = 'status', period } = req.query;
         const dateFilter = createDateFilter(period);
@@ -150,7 +152,7 @@ router.get('/case-stats', async (req, res) => {
 });
 
 // Estatísticas de usuários com dados de atividade
-router.get('/users-stats', async (req, res) => {
+router.get('/users-stats', verifyJWT, authorize(['admin']), async (req, res) => {
     try {
         const { role, period } = req.query;
         const dateFilter = createDateFilter(period);
@@ -199,7 +201,7 @@ router.get('/users-stats', async (req, res) => {
 });
 
 // Timeline de casos com timezone
-router.get('/cases-timeline', async (req, res) => {
+router.get('/cases-timeline', verifyJWT, authorize(['admin']), async (req, res) => {
     try {
         const dateFilter = createDateFilter(
             req.query.period,
@@ -236,7 +238,7 @@ router.get('/cases-timeline', async (req, res) => {
     }
 });
 
-router.get('/recent-activity', async (req, res) => {
+router.get('/recent-activity', verifyJWT, authorize(['admin']), async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 5;
         
@@ -283,7 +285,7 @@ router.get('/recent-activity', async (req, res) => {
     }
 });
 
-router.get('/location-stats', async (req, res) => {
+router.get('/location-stats', verifyJWT, authorize(['admin']), async (req, res) => {
     try {
         const dateFilter = createDateFilter(req.query.period);
         

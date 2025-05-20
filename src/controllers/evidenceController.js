@@ -32,7 +32,8 @@ exports.createEvidence = async (req, res) => {
     const performingUserId = req.userId; // Usuário que está criando a evidência
 
     try {
-        const { caseId, evidenceType, title, description, data, category } = req.body;
+        const { caseId } = req.params;
+        const { evidenceType, title, description, data, category } = req.body;
 
         // Validação do CaseId
         if (!caseId || !mongoose.Types.ObjectId.isValid(caseId)) {

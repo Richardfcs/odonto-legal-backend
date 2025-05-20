@@ -4,7 +4,6 @@ const mongoose = require('mongoose');       // Para validação de ObjectId
 // Função para listar TODOS os logs de auditoria com paginação e filtros básicos
 exports.getAuditLogs = async (req, res) => {
     try {
-        // --- Paginação ---
         // Obtém a página e o limite da query string, com valores padrão
         const page = parseInt(req.query.page) || 1;        // Página atual, padrão 1
         const limit = parseInt(req.query.limit) || 50;       // Itens por página, padrão 50

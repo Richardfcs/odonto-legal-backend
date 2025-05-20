@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { verifyJWT, authorize } = require('../middleware/auth');
+const { verifyJWT, authorize, checkTeamAccess } = require('../middleware/auth');
 const { generateReport } = require('../controllers/reportController');
 const path = require('path');
 const fs = require('fs');
 
-router.post('/', verifyJWT, authorize(['perito', 'admin']), generateReport);
+router.post('/', verifyJWT, checkTeamAccess, generateReport);
 
 router.get('/download/:reportId', async (req, res) => {
     try {

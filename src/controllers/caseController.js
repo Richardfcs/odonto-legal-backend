@@ -2,7 +2,7 @@ const User = require('../models/user'); // Garanta que esta linha está presente
 const Case = require('../models/case');
 const Evidence = require('../models/evidence');
 const mongoose = require('mongoose');
-const AuditLog = require('../models/auditlog'); 
+const AuditLog = require('../models/auditlog');
 const axios = require('axios'); // Importar Axios
 
 // caseController.js
@@ -15,8 +15,8 @@ const saveAuditLog = (userId, action, targetModel, targetId, details) => {
         return; // Vamos optar por não logar se não houver userId válido
     }
     if (!targetId) {
-         console.warn(`Tentativa de salvar log sem targetId para ação ${action} em ${targetModel} por ${userId}`);
-         return;
+        console.warn(`Tentativa de salvar log sem targetId para ação ${action} em ${targetModel} por ${userId}`);
+        return;
     }
 
     const log = new AuditLog({
@@ -95,7 +95,7 @@ exports.getCases = async (req, res) => {
         const cases = await Case.find()
             .populate('responsibleExpert', 'name email role')
             .populate('team', 'name');
-            // Evidences geralmente são buscadas em outra rota, mas se precisar aqui, adicione: .populate('evidences');
+        // Evidences geralmente são buscadas em outra rota, mas se precisar aqui, adicione: .populate('evidences');
         res.status(200).json(cases);
         // Opcional: Log de leitura
         // saveAuditLog(req.userId, 'VIEW_CASE_LIST', 'Case', 'all'); // Exemplo
@@ -106,24 +106,24 @@ exports.getCases = async (req, res) => {
 
 // Obter um caso por ID
 exports.getCaseById = async (req, res) => {
-     // Leitura - Log opcional
+    // Leitura - Log opcional
     try {
         const caseId = req.params.id;
         if (!mongoose.Types.ObjectId.isValid(caseId)) {
-             return res.status(400).json({ msg: "ID de caso inválido." });
+            return res.status(400).json({ msg: "ID de caso inválido." });
         }
 
         const caso = await Case.findById(caseId)
             .populate('responsibleExpert', 'name role')
             .populate('team', 'name role');
-            // Evidências são buscadas em /api/evidence/:caseId, não precisa popular aqui geralmente
+        // Evidências são buscadas em /api/evidence/:caseId, não precisa popular aqui geralmente
 
         if (!caso) {
             return res.status(404).json({ msg: "Caso não encontrado." });
         }
 
-         // Opcional: Log de leitura de detalhes
-         // saveAuditLog(req.userId, 'VIEW_CASE_DETAILS', 'Case', caso._id);
+        // Opcional: Log de leitura de detalhes
+        // saveAuditLog(req.userId, 'VIEW_CASE_DETAILS', 'Case', caso._id);
 
         res.status(200).json(caso);
     } catch (error) {
@@ -140,7 +140,7 @@ exports.updateCase = async (req, res) => {
     try {
         // Validação do ID
         if (!mongoose.Types.ObjectId.isValid(caseId)) {
-             return res.status(400).json({ msg: "ID de caso inválido." });
+            return res.status(400).json({ msg: "ID de caso inválido." });
         }
 
         // Busca o caso para verificar permissão e dados antigos
@@ -149,22 +149,12 @@ exports.updateCase = async (req, res) => {
             return res.status(404).json({ error: "Caso não encontrado." });
         }
 
-        // Autorização: Admin ou Perito Responsável
-        // IMPORTANTE: Caso.responsibleExpert armazena o ObjectId. Precisamos compará-lo com o `performingUserId` (string do token).
-        if (performingUserRole !== 'admin' && caso.responsibleExpert?.toString() !== performingUserId) {
-            return res.status(403).json({ error: "Acesso não autorizado para atualizar este caso." });
-        }
-
-        // Opcional: Coletar dados antigos para log
-        // const previousData = { nameCase: caso.nameCase, status: caso.status, /* outros campos relevantes */ };
-
         // Atualiza o caso com os dados do corpo da requisição
         const updatedCase = await Case.findByIdAndUpdate(
             caseId,
             { ...req.body, updateAt: Date.now() }, // Inclui updateAt
             { new: true, runValidators: true } // Retorna o novo doc e roda validadores
         );
-        // Não precisa popular aqui, pois a resposta geralmente é só o documento atualizado ou uma mensagem.
 
         // --- LOG de Auditoria ---
         saveAuditLog(performingUserId, 'UPDATE_CASE', 'Case', updatedCase._id, { changes: req.body /*, previous: previousData */ });
@@ -187,9 +177,9 @@ exports.deleteCase = async (req, res) => {
     let deletedCaseName = 'unknown'; // Para o log
 
     try {
-         // Validação do ID
+        // Validação do ID
         if (!mongoose.Types.ObjectId.isValid(caseId)) {
-             return res.status(400).json({ msg: "ID de caso inválido." });
+            return res.status(400).json({ msg: "ID de caso inválido." });
         }
 
         // Encontra e deleta o caso
@@ -200,9 +190,9 @@ exports.deleteCase = async (req, res) => {
 
         // Opcional: Remover referências deste caso nos usuários associados
         await User.updateMany(
-             { _id: { $in: [caso.responsibleExpert, ...(caso.team || [])] } },
-             { $pull: { cases: caso._id } }
-         );
+            { _id: { $in: [caso.responsibleExpert, ...(caso.team || [])] } },
+            { $pull: { cases: caso._id } }
+        );
         // Opcional: Deletar evidências associadas? Depende da regra de negócio.
         // await Evidence.deleteMany({ caseId: caso._id });
 
@@ -413,10 +403,10 @@ exports.analyzeCaseWithAI = async (req, res) => {
 
         // Verificações de evidências encontradas (mantidas)
         if (action === 'compare' && relevantEvidences.length !== 2) {
-             return res.status(404).json({ error: "Uma ou ambas as evidências especificadas para comparação não foram encontradas ou não são textuais." });
+            return res.status(404).json({ error: "Uma ou ambas as evidências especificadas para comparação não foram encontradas ou não são textuais." });
         }
         if (relevantEvidences.length === 0 && action !== 'compare') {
-             return res.status(404).json({ error: "Nenhuma evidência textual encontrada neste caso para análise." });
+            return res.status(404).json({ error: "Nenhuma evidência textual encontrada neste caso para análise." });
         }
 
 
@@ -493,5 +483,134 @@ exports.analyzeCaseWithAI = async (req, res) => {
             error: "Erro ao processar análise com IA.",
             details: error.response?.data?.error?.message || error.message
         });
+    }
+};
+
+exports.addToTeam = async (req, res) => {
+    const { caseId, userId } = req.params;
+    const performingUserId = req.userId;
+
+    try {
+        // Validações básicas
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: "ID de usuário inválido" });
+        }
+
+        const caso = await Case.findById(caseId);
+        const userToAdd = await User.findById(userId);
+        const performingUser = await User.findById(performingUserId);
+
+        // Verifica existência
+        if (!caso || !userToAdd || !performingUser) {
+            return res.status(404).json({ error: "Recurso não encontrado" });
+        }
+
+        // Autorização: Só admin ou perito responsável
+        const isAdmin = performingUser.role === 'admin';
+        const isResponsible = caso.responsibleExpert.toString() === performingUserId;
+
+        if (!isAdmin && !isResponsible) {
+            return res.status(403).json({ error: "Acesso não autorizado" });
+        }
+
+        // Verifica se o usuário é assistente ou perito
+        if (!['assistente', 'perito'].includes(userToAdd.role)) {
+            return res.status(400).json({ error: "Usuário deve ser assistente ou perito" });
+        }
+
+        // Evita duplicatas
+        if (caso.team.includes(userId)) {
+            return res.status(400).json({ error: "Usuário já está no team" });
+        }
+
+        // Adiciona ao team e atualiza casos do usuário
+        caso.team.push(userId);
+        await caso.save();
+
+        await User.findByIdAndUpdate(userId, {
+            $addToSet: { cases: caso._id }
+        });
+
+        const updatedCase = await Case.findById(caseId) // Busca o caso novamente pelo ID
+            .populate('responsibleExpert', 'name role') // Popula o responsável
+            .populate('team', 'name role');             // Popula a equipe
+
+        // Log de Auditoria (EXEMPLO)
+        saveAuditLog(performingUserId, 'ADD_TEAM_MEMBER', 'Case', caso._id, { addedUserId: userId, addedUserName: userToAdd.name, caseName: caso.nameCase });
+
+        res.status(200).json({ message: `Usuário ${userToAdd.name} adicionado à equipe com sucesso.`, case: updatedCase });
+    } catch (error) {
+        console.error("Erro ao adicionar ao team:", error);
+        saveAuditLog(performingUserId, 'ADD_TEAM_MEMBER_FAILED', 'Case', caso._id, { error: error.message });
+        res.status(500).json({ error: "Erro interno do servidor" });
+    }
+};
+
+exports.removeTeamMemberFromCase = async (req, res) => {
+    const { caseId, userId } = req.params;
+    const performingUserId = req.userId; // Do token JWT
+
+    try {
+        // Validações básicas dos IDs
+        if (!mongoose.Types.ObjectId.isValid(caseId)) {
+            return res.status(400).json({ error: "ID de caso inválido" });
+        }
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: "ID de usuário a ser removido é inválido" });
+        }
+        if (!mongoose.Types.ObjectId.isValid(performingUserId)) {
+            return res.status(401).json({ error: "ID do usuário performante inválido." });
+        }
+
+        const caso = await Case.findById(caseId);
+        const userToRemoveInfo = await User.findById(userId).select('name'); // Para log ou mensagem
+
+        // Verifica existência do caso
+        if (!caso) {
+            return res.status(404).json({ error: "Caso não encontrado" });
+        }
+        // O userToRemoveInfo pode ser null se o ID for válido mas o usuário não existir mais.
+        // A lógica de remoção da equipe ainda pode prosseguir.
+
+        // Autorização: Só admin ou perito responsável pelo caso
+        const isAdmin = req.userRole === 'admin';
+        const isResponsible = caso.responsibleExpert && (caso.responsibleExpert.toString() === performingUserId.toString());
+
+        if (!isAdmin && !isResponsible) {
+            return res.status(403).json({ error: "Acesso não autorizado. Apenas ADM ou o Perito Responsável podem remover membros." });
+        }
+
+        // Verifica se o usuário a ser removido está realmente na equipe
+        const initialTeamLength = caso.team.length;
+        caso.team = caso.team.filter(memberId => memberId.toString() !== userId.toString());
+
+        if (caso.team.length === initialTeamLength) {
+            return res.status(404).json({ error: "Usuário não encontrado na equipe deste caso." });
+        }
+
+        // Remove a referência do caso do array 'cases' do usuário removido
+        // Isso é importante para manter a consistência nos dados do usuário
+        await User.findByIdAndUpdate(userId, {
+            $pull: { cases: caso._id }
+        });
+
+        await caso.save(); // Salva o caso com a equipe atualizada
+
+        // Retorna o caso atualizado e populado para o frontend
+        const updatedCase = await Case.findById(caseId)
+            .populate('responsibleExpert', 'name role')
+            .populate('team', 'name role');
+
+        // Log de Auditoria (EXEMPLO)
+        const removedUserName = userToRemoveInfo ? userToRemoveInfo.name : userId;
+        saveAuditLog(performingUserId, 'REMOVE_TEAM_MEMBER', 'Case', caso._id, { removedUserId: userId, removedUserName: removedUserName, caseName: caso.nameCase });
+
+        res.status(200).json({ message: `Usuário ${userToRemoveInfo ? userToRemoveInfo.name : 'ID ' + userId} removido da equipe com sucesso.`, case: updatedCase });
+
+    } catch (error) {
+        console.error("Erro ao remover membro da equipe:", error);
+        // Log de Auditoria de Falha (EXEMPLO)
+        saveAuditLog(performingUserId, 'REMOVE_TEAM_MEMBER_FAILED', 'Case', caseId, { error: error.message });
+        res.status(500).json({ error: "Erro interno do servidor ao remover membro da equipe." });
     }
 };
