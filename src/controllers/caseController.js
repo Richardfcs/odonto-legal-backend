@@ -67,10 +67,10 @@ exports.createCase = async (req, res) => {
         );
 
         // 2. Adiciona à equipe (garantido não duplicar, mesmo que o responsável esteja aqui)
-        if (teamIds.length > 0) {
+        if (team && team.length > 0) {
             await User.updateMany(
-                { _id: { $in: teamIds } },
-                { $addToSet: { cases: newCase._id } } // Usa $addToSet
+                { _id: { $in: team } },
+                { $addToSet: { cases: newCase._id } }
             );
         }
 
