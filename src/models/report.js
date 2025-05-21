@@ -6,6 +6,15 @@ const reportSchema = new mongoose.Schema({
     ref: 'Case',
     required: true
   },
+  reportType: { // Novo campo para diferenciar os tipos de laudo
+    type: String,
+    enum: ['case_general', 'evidence_specific'],
+    default: 'case_general' // Laudo geral do caso por padrão
+  },
+  relatedEvidences: [{ // Novo campo para IDs de evidências (para laudos de evidência)
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Evidence'
+  }],
   content: { // O conteúdo de texto livre do laudo (digitado pelo perito)
     type: String,
     required: true

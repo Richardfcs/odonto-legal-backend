@@ -43,9 +43,11 @@ const auditLogSchema = new mongoose.Schema({
             // ---- Ações de Laudo (Report) ----
             'CREATE_REPORT',            // Geração bem-sucedida de um laudo (PDF e registro DB)
             'DELETE_REPORT',            // Exclusão bem-sucedida de um laudo (registro DB e opcionalmente PDF)
+            'CREATE_EVIDENCE_REPORT',
             // Ações de Falha (Laudo)
             'CREATE_REPORT_FAILED',     // Tentativa falha de gerar laudo
             'DELETE_REPORT_FAILED',     // Tentativa falha de excluir laudo
+            'CREATE_EVIDENCE_REPORT_FAILED',
 
             // ---- Ações de Análise com IA ----
             'AI_ANALYSIS_SUMMARIZE',
