@@ -201,17 +201,17 @@ exports.updateEvidence = async (req, res) => {
          }
 
         // --- LOG de Auditoria  ---
-        const logDetails = {
-            caseId: updatedEvidence.caseId,
-            changes: { ...updateData } 
-       };
-       if (logDetails.changes.data && updatedEvidence.evidenceType === 'image' && typeof logDetails.changes.data === 'string' && logDetails.changes.data.startsWith('data:image')) {
-            logDetails.changes.data = '[Image Data (Base64 Skipped)]';
-       } else if (logDetails.changes.data && typeof logDetails.changes.data === 'string' && logDetails.changes.data.length > 200) {
-             logDetails.changes.data = logDetails.changes.data.substring(0, 200) + '...';
-       }
+    //     const logDetails = {
+    //         caseId: updatedEvidence.caseId,
+    //         changes: { ...updateData } 
+    //    };
+    //    if (logDetails.changes.data && updatedEvidence.evidenceType === 'image' && typeof logDetails.changes.data === 'string' && logDetails.changes.data.startsWith('data:image')) {
+    //         logDetails.changes.data = '[Image Data (Base64 Skipped)]';
+    //    } else if (logDetails.changes.data && typeof logDetails.changes.data === 'string' && logDetails.changes.data.length > 200) {
+    //          logDetails.changes.data = logDetails.changes.data.substring(0, 200) + '...';
+    //    }
 
-       saveAuditLog(performingUserId, 'UPDATE_EVIDENCE', 'Evidence', updatedEvidence._id, logDetails);
+       saveAuditLog(performingUserId, 'UPDATE_EVIDENCE', 'Evidence', updatedEvidence._id);
        // --- Fim LOG ---
 
        res.status(200).json(updatedEvidence);
