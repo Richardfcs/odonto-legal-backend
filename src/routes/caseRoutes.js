@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { createCase, getCases, getCaseById, updateCase, deleteCase, getCasesByName, getCasesByStatus, getCasesByData, getCasesByDataCase, getCasesByCategory, addToTeam, removeTeamMemberFromCase, analyzeCaseWithAI } = require('../controllers/caseController');
+const { getVictimsByCase } = require('../controllers/victimController');
 const { verifyJWT, authorize, checkTeamAccess } = require('../middleware/auth');
 
 // métodos de filtro (tem que vir antes de /:id sempre)
@@ -20,5 +21,7 @@ router.post('/:caseId/team/:userId', verifyJWT, authorize(['admin', 'perito']), 
 router.delete('/:caseId/team/:userId', verifyJWT, authorize(['admin', 'perito']), removeTeamMemberFromCase);
 // Rota para análise com IA (POST porque envia dados no corpo)
 router.post('/:caseId/analyze', verifyJWT, checkTeamAccess, analyzeCaseWithAI); // Protegida e autorizada
+// Rota para listar todas as vítimas de um caso específico
+router.get('/:caseId/victims', verifyJWT, getVictimsByCase);
 
 module.exports = router;

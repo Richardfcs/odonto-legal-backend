@@ -31,6 +31,15 @@ const auditLogSchema = new mongoose.Schema({
             'DELETE_CASE_FAILED',       // Tentativa falha de excluir caso
             'REMOVE_TEAM_MEMBER_FAILED',
 
+            // ---- Ações de Vítima ----
+            'CREATE_VICTIM',
+            'UPDATE_VICTIM',
+            'DELETE_VICTIM',
+            // ---- Ações de Falha (Vítima) ----
+            'CREATE_VICTIM_FAILED',
+            'UPDATE_VICTIM_FAILED',
+            'DELETE_VICTIM_FAILED',
+
             // ---- Ações de Evidência ----
             'CREATE_EVIDENCE',          // Criação bem-sucedida de uma evidência
             'UPDATE_EVIDENCE',          // Atualização bem-sucedida de uma evidência
@@ -80,7 +89,8 @@ const auditLogSchema = new mongoose.Schema({
             'Report',       // Ação relacionada a um Laudo
             'Auth',         // Ação relacionada a Autenticação (Login)
             'System',       // Ação geral do sistema ou leitura de listas (sem ID específico)
-            'AI'            // Ação relacionada à funcionalidade de IA
+            'AI',            // Ação relacionada à funcionalidade de IA
+            'Victim'
             ]
     },
     targetId: { // ID do documento alvo (ou identificador relevante como email/nome/ação)
