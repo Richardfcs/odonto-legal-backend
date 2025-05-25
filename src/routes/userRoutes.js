@@ -5,7 +5,7 @@ const { createUser, getUsers, updateUserRole, updateUser, loginUser, getOnlyUser
 
 router.get('/me', verifyJWT, getMe);
 router.get('/mycases', verifyJWT, getMyCasesList, checkTeamAccess);
-router.get('/search', verifyJWT, getUsersByName);
+router.get('/fname', verifyJWT, getUsersByName);
 // Os métodos e Rotas dos usuários
 router.post('/', verifyJWT, authorize(['admin']), createUser);
 router.get('/:id', verifyJWT, getOnlyUser);
