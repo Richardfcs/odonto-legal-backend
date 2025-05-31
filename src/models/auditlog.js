@@ -29,6 +29,7 @@ const auditLogSchema = new mongoose.Schema({
             'CREATE_CASE_FAILED',       // Tentativa falha de criar caso
             'UPDATE_CASE_FAILED',       // Tentativa falha de atualizar caso
             'DELETE_CASE_FAILED',       // Tentativa falha de excluir caso
+            'ADD_TEAM_MEMBER_FAILED',
             'REMOVE_TEAM_MEMBER_FAILED',
 
             // ---- Ações de Vítima ----

@@ -1,5 +1,5 @@
-const User = require('../models/user'); // Garanta que esta linha está presente
 const Case = require('../models/case');
+const User = require('../models/user');  // Garanta que esta linha está presente
 const Evidence = require('../models/evidence');
 const mongoose = require('mongoose');
 const AuditLog = require('../models/auditlog');
@@ -541,7 +541,7 @@ exports.addToTeam = async (req, res) => {
         res.status(200).json({ message: `Usuário ${userToAdd.name} adicionado à equipe com sucesso.`, case: updatedCase });
     } catch (error) {
         console.error("Erro ao adicionar ao team:", error);
-        saveAuditLog(performingUserId, 'ADD_TEAM_MEMBER_FAILED', 'Case', caso._id, { error: error.message });
+        saveAuditLog(performingUserId, 'ADD_TEAM_MEMBER_FAILED', 'Case', caseId, { error: error.message });
         res.status(500).json({ error: "Erro interno do servidor" });
     }
 };
