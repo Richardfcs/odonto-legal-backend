@@ -251,8 +251,7 @@ exports.getVictimById = async (req, res) => {
         const victim = await Victim.findById(victimId)
             .populate('case', 'nameCase responsibleExpert team') // Popula dados do caso para checagem de permissão
             .populate('createdBy', 'name')
-            .populate('lastUpdatedBy', 'name');
-            // .populate('odontogramPostMortem'); // Se já tiver o modelo Odontogram
+            .populate('lastUpdatedBy', 'name')
 
         if (!victim) {
             return res.status(404).json({ error: "Vítima não encontrada." });

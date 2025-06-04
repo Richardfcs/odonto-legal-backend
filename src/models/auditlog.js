@@ -50,6 +50,16 @@ const auditLogSchema = new mongoose.Schema({
             'UPDATE_EVIDENCE_FAILED',   // Tentativa falha de atualizar evidência
             'DELETE_EVIDENCE_FAILED',   // Tentativa falha de excluir evidência
 
+            // ---- Ações de Odontograma ---
+            'CREATE_ODONTOGRAM',
+            'UPDATE_ODONTOGRAM',
+            'DELETE_ODONTOGRAM',
+
+            // Ações de Falha (Odontograma)
+            'CREATE_ODONTOGRAM_FAILED',
+            'UPDATE_ODONTOGRAM_FAILED',
+            'DELETE_ODONTOGRAM_FAILED',
+
             // ---- Ações de Laudo (Report) ----
             'CREATE_REPORT',            // Geração bem-sucedida de um laudo (PDF e registro DB)
             'DELETE_REPORT',            // Exclusão bem-sucedida de um laudo (registro DB e opcionalmente PDF)
@@ -91,7 +101,8 @@ const auditLogSchema = new mongoose.Schema({
             'Auth',         // Ação relacionada a Autenticação (Login)
             'System',       // Ação geral do sistema ou leitura de listas (sem ID específico)
             'AI',            // Ação relacionada à funcionalidade de IA
-            'Victim'
+            'Victim',
+            'Odontogram'
             ]
     },
     targetId: { // ID do documento alvo (ou identificador relevante como email/nome/ação)
