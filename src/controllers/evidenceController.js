@@ -35,6 +35,12 @@ exports.createEvidence = async (req, res) => {
         const { caseId } = req.params;
         const { evidenceType, title, description, data, category, location } = req.body;
 
+        if (location) {
+            if (!location.type || location.type !== 'Point' || !location.coordinates || !Array.isArray(location.coordinates) || location.coordinates.length !== 2) {
+                return res.status(400).json({ error: "Formato de localização inválido. Deve ser um objeto com 'type: Point' e 'coordinates: [longitude, latitude]'." });
+            }
+        }
+
         // Validação do CaseId
         if (!caseId || !mongoose.Types.ObjectId.isValid(caseId)) {
             return res.status(400).json({ msg: "ID de caso inválido ou ausente." });
