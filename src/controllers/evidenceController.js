@@ -33,7 +33,7 @@ exports.createEvidence = async (req, res) => {
 
     try {
         const { caseId } = req.params;
-        const { evidenceType, title, description, data, category } = req.body;
+        const { evidenceType, title, description, data, category, location } = req.body;
 
         // Validação do CaseId
         if (!caseId || !mongoose.Types.ObjectId.isValid(caseId)) {
@@ -49,7 +49,7 @@ exports.createEvidence = async (req, res) => {
 
 
         const evidenceInstance = new Evidence({
-            caseId, evidenceType, title, description, data, category,
+            caseId, evidenceType, title, description, data, category, location,
             collectedBy: performingUserId // ID do usuário logado
         });
 
