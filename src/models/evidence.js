@@ -1,18 +1,5 @@
 const mongoose = require('mongoose');
 
-// Definindo um sub-schema para a localização GeoJSON
-const pointSchema = new mongoose.Schema({
-    type: {
-        type: String,
-        enum: ['Point'],
-        required: true
-    },
-    coordinates: {
-        type: [Number], // Array de números [longitude, latitude]
-        required: true
-    }
-});
-
 const evidenceSchema = new mongoose.Schema({
     caseId: {  // Relacionamento com o Caso Pericial
         type: mongoose.Schema.Types.ObjectId,
@@ -35,8 +22,15 @@ const evidenceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed // Permite armazenar diferentes tipos de dados (String, Objeto JSON, URL, etc.)
     },
     location: {
-        type: pointSchema,
-        index: '2dsphere' // Otimiza para buscas geoespaciais
+        type: {
+            type: String,
+            enum: ['Point'], // 'location.type' deve ser 'Point'
+            required: false // Torna o objeto de localização opcional
+        },
+        coordinates: {
+            type: [Number], // Array de números [longitude, latitude]
+            required: false
+        }
     },
     category: { // Categoria da Evidência (Achados Periciais, Dados Ante-mortem, etc.) - Opcional inicialmente
         type: String,
@@ -57,6 +51,7 @@ const evidenceSchema = new mongoose.Schema({
     }
 });
 
+evidenceSchema.index({ location: '2dsphere' });
 evidenceSchema.index({ caseId: 1, createdAt: -1 });
 evidenceSchema.index({ category: 1, evidenceType: 1 });
 
