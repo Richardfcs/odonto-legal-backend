@@ -259,20 +259,6 @@ exports.getVictimById = async (req, res) => {
 
         // Autorização para ver detalhes da vítima:
         // ADM, Perito Responsável pelo caso da vítima, ou Membro da Equipe do caso da vítima
-        const isAdmin = performingUserRole === 'admin';
-        let hasCaseAccess = false;
-        if (victim.case) { // Verifica se victim.case (o objeto populado) existe
-            const caseData = victim.case;
-            const isResponsibleExpert = caseData.responsibleExpert && caseData.responsibleExpert.toString() === performingUserId.toString();
-            const isTeamMember = caseData.team && caseData.team.map(memberId => memberId.toString()).includes(performingUserId.toString());
-            if (isResponsibleExpert || isTeamMember) {
-                hasCaseAccess = true;
-            }
-        }
-
-        if (!(isAdmin || hasCaseAccess)) {
-            return res.status(403).json({ error: "Acesso negado. Você não tem permissão para visualizar esta vítima." });
-        }
 
         // Remove a população completa do caso se não for necessário na resposta final,
         // ou re-popule apenas com os campos desejados.
