@@ -187,15 +187,8 @@ exports.createOdontogram = async (req, res) => {
 // --- OBTER ODONTOGRAMA(S) DE UMA VÍTIMA ---
 exports.getOdontogramsByVictim = async (req, res) => {
     const { victimId } = req.params;
-    const performingUserId = req.userId;
-    const performingUserRole = req.userRole;
 
     try {
-        const permCheck = await checkOdontogramPermission(victimId, performingUserId, performingUserRole, 'view');
-        if (!permCheck.authorized) {
-            return res.status(permCheck.status).json({ error: permCheck.message });
-        }
-
         const odontograms = await Odontogram.find({ victim: victimId })
             .populate('examiner', 'name role') // Adicionado role
             .populate('case', 'nameCase')
@@ -214,8 +207,6 @@ exports.getOdontogramsByVictim = async (req, res) => {
 // --- OBTER UM ODONTOGRAMA ESPECÍFICO PELO SEU ID ---
 exports.getOdontogramById = async (req, res) => {
     const { odontogramId } = req.params;
-    const performingUserId = req.userId;
-    const performingUserRole = req.userRole;
 
     try {
         if (!mongoose.Types.ObjectId.isValid(odontogramId)) {
@@ -236,14 +227,6 @@ exports.getOdontogramById = async (req, res) => {
             return res.status(404).json({ error: "Odontograma encontrado, mas vítima associada não existe ou está corrompida." });
         }
 
-
-        const permCheck = await checkOdontogramPermission(odontogram.victim._id, performingUserId, performingUserRole, 'view');
-        if (!permCheck.authorized) {
-            if (permCheck.status === 404 && permCheck.message.includes("Vítima não encontrada")) {
-                return res.status(404).json({ error: "Vítima associada ao odontograma não foi encontrada para verificação de permissão." });
-            }
-            return res.status(permCheck.status).json({ error: permCheck.message });
-        }
         res.status(200).json(odontogram);
     } catch (error) {
         console.error("Erro ao obter odontograma por ID:", error);
