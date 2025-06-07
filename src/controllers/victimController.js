@@ -415,13 +415,6 @@ exports.getVictimsByCase = async (req, res) => {
         }
 
         // Autorização para ver vítimas deste caso (ADM, Responsável pelo caso, Membro da equipe do caso)
-        const isAdmin = performingUserRole === 'admin';
-        const isResponsibleExpert = caso.responsibleExpert && caso.responsibleExpert.toString() === performingUserId.toString();
-        const isTeamMember = caso.team && caso.team.map(memberId => memberId.toString()).includes(performingUserId.toString());
-
-        if (!(isAdmin || isResponsibleExpert || isTeamMember)) {
-            return res.status(403).json({ error: "Acesso negado. Você não tem permissão para listar vítimas deste caso." });
-        }
 
         // Busca as vítimas do caso especificado
         const victims = await Victim.find({ case: caseId })
