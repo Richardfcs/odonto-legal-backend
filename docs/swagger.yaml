@@ -1,0 +1,1446 @@
+openapi: 3.0.0
+info:
+  title: API de Análise Criminal - Usuários
+  version: 1.0.0
+
+servers:
+  - url: https://odonto-legal-backend.onrender.com
+    description: Servidor de produção
+
+paths:
+  /users:
+    get:
+      summary: Listar todos os usuários
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Lista de usuários
+        500:
+          description: Erro no servidor
+
+    post:
+      summary: Criar novo usuário
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        201:
+          description: Usuário criado
+        400:
+          description: Dados inválidos
+
+  /users/login:
+    post:
+      summary: Login do usuário
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login bem-sucedido
+        404:
+          description: Usuário não encontrado
+        422:
+          description: Senha incorreta
+
+  /users/{id}:
+    get:
+      summary: Buscar usuário por ID
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Usuário encontrado
+        404:
+          description: Não encontrado
+
+    put:
+      summary: Atualizar dados do usuário
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        200:
+          description: Usuário atualizado
+
+    patch:
+      summary: Atualizar role do usuário
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+      responses:
+        200:
+          description: Role atualizada
+
+    delete:
+      summary: Remover usuário
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Usuário deletado
+
+  /users/me:
+    get:
+      summary: Buscar perfil do usuário logado
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Perfil retornado
+
+  /users/search:
+    get:
+      summary: Buscar usuários por nome ou CRO
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: role
+          schema:
+            type: string
+      responses:
+        200:
+          description: Lista de resultados
+
+
+  /cases:
+    get:
+      summary: Listar todos os casos
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Lista de casos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+        '500':
+          description: Erro no servidor
+
+    post:
+      summary: Criar novo caso
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseInput'
+      responses:
+        '201':
+          description: Caso criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Não autenticado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/{id}:
+    get:
+      summary: Buscar caso por ID
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID do caso
+      responses:
+        '200':
+          description: Caso encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '400':
+          description: ID inválido
+        '404':
+          description: Caso não encontrado
+        '500':
+          description: Erro interno do servidor
+
+    put:
+      summary: Atualizar um caso
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseInput'
+      responses:
+        '200':
+          description: Caso atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '400':
+          description: Dados inválidos ou ID inválido
+        '404':
+          description: Caso não encontrado
+        '500':
+          description: Erro interno do servidor
+
+    delete:
+      summary: Excluir um caso
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Caso excluído com sucesso
+        '400':
+          description: ID inválido
+        '404':
+          description: Caso não encontrado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/search/by-name:
+    get:
+      summary: Buscar casos por nome
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: nameCase
+          required: true
+          schema:
+            type: string
+          description: Nome ou parte do nome do caso
+      responses:
+        '200':
+          description: Casos encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+        '400':
+          description: Nome não fornecido
+        '404':
+          description: Nenhum caso encontrado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/search/by-status:
+    get:
+      summary: Buscar casos por status
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Casos encontrados por status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+        '400':
+          description: Status não fornecido
+        '404':
+          description: Nenhum caso encontrado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/search/by-date:
+    get:
+      summary: Buscar casos por data de criação
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date-time
+          description: Data inicial (ex: 2025-06-01)
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date-time
+          description: Data final
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [oldest, newest]
+          description: Ordem de retorno
+      responses:
+        '200':
+          description: Casos encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+        '404':
+          description: Nenhum caso encontrado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/search/by-date-case:
+    get:
+      summary: Buscar casos por data do caso (field dateCase)
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Data mínima no campo dateCase
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [oldest, newest]
+          description: Ordem de retorno
+      responses:
+        '200':
+          description: Casos encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+        '404':
+          description: Nenhum caso encontrado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/search/by-category:
+    get:
+      summary: Buscar casos por categoria
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: category
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Casos encontrados por categoria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Case'
+        '404':
+          description: Nenhum caso encontrado
+        '500':
+          description: Erro interno do servidor
+
+  /cases/{caseId}/analyze:
+    post:
+      summary: Analisar caso com IA
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [summarize, compare, hypothesize, check_inconsistencies]
+                evidenceIds:
+                  type: array
+                  items:
+                    type: string
+              required: [action]
+      responses:
+        '200':
+          description: Resultado da análise de IA
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis:
+                    type: string
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Caso ou evidências não encontrados
+        '500':
+          description: Erro interno do servidor
+
+  /cases/{caseId}/team/{userId}:
+    post:
+      summary: Adicionar membro ao time do caso
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membro adicionado ao caso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '400':
+          description: Dados inválidos
+        '403':
+          description: Acesso não autorizado
+        '404':
+          description: Caso ou usuário não encontrados
+        '500':
+          description: Erro interno do servidor
+
+    delete:
+      summary: Remover membro do time do caso
+      tags: [Cases]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membro removido do caso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '400':
+          description: Dados inválidos
+        '403':
+          description: Acesso não autorizado
+        '404':
+          description: Caso ou usuário não encontrados
+        '500':
+          description: Erro interno do servidor
+
+  /cases/{caseId}/evidences:
+    post:
+      summary: Criar evidência
+      tags: [Evidences]
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvidenceInput'
+      responses:
+        '201':
+          description: Evidência criada com sucesso
+        '400':
+          description: Requisição inválida
+        '500':
+          description: Erro interno
+    get:
+      summary: Listar evidências por caso
+      tags: [Evidences]
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de evidências do caso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceListResponse'
+        '400':
+          description: ID inválido
+        '500':
+          description: Erro interno
+
+  /evidences:
+    get:
+      summary: Listar todas as evidências
+      tags: [Evidences]
+      responses:
+        '200':
+          description: Lista de todas as evidências
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceListResponse'
+        '500':
+          description: Erro interno
+
+  /evidences/{id}:
+    delete:
+      summary: Deletar evidência
+      tags: [Evidences]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Evidência excluída com sucesso
+        '400':
+          description: ID inválido
+        '404':
+          description: Não encontrada
+        '500':
+          description: Erro interno
+
+    put:
+      summary: Atualizar evidência
+      tags: [Evidences]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvidenceInput'
+      responses:
+        '200':
+          description: Evidência atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+        '400':
+          description: ID inválido
+        '404':
+          description: Não encontrada
+        '500':
+          description: Erro interno
+
+  /api/victims:
+    get:
+      summary: Listar todas as vítimas
+      tags: [Victims]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: Lista de vítimas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  victims:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Victim'
+                  totalPages:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  totalVictims:
+                    type: integer
+        '403':
+          description: Acesso negado
+        '500':
+          description: Erro interno do servidor
+
+    post:
+      summary: Criar nova vítima
+      tags: [Victims]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VictimInput'
+      responses:
+        '201':
+          description: Vítima criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  victim:
+                    $ref: '#/components/schemas/Victim'
+        '400':
+          description: Requisição inválida
+        '403':
+          description: Acesso negado
+        '500':
+          description: Erro interno do servidor
+
+  /api/victims/{victimId}:
+    get:
+      summary: Obter vítima por ID
+      tags: [Victims]
+      parameters:
+        - name: victimId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalhes da vítima
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Victim'
+        '404':
+          description: Recurso não encontrado
+
+    put:
+      summary: Atualizar vítima
+      tags: [Victims]
+      parameters:
+        - name: victimId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VictimUpdate'
+      responses:
+        '200':
+          description: Vítima atualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  victim:
+                    $ref: '#/components/schemas/Victim'
+        '400':
+          description: Requisição inválida
+        '403':
+          description: Acesso negado
+        '500':
+          description: Erro interno do servidor
+
+    delete:
+      summary: Deletar vítima
+      tags: [Victims]
+      parameters:
+        - name: victimId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vítima deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Acesso negado
+        '500':
+          description: Erro interno do servidor
+
+  /api/cases/{caseId}/victims:
+    get:
+      summary: Listar vítimas por caso
+      tags: [Victims]
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de vítimas do caso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Victim'
+        '404':
+          description: Caso não encontrado
+        '500':
+          description: Erro interno do servidor
+  /reports/generate:
+    post:
+      summary: Gerar laudo geral com base nas evidências fornecidas
+      tags:
+        - Reports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                evidenceIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Lista de IDs de evidências para o laudo
+      responses:
+        '200':
+          description: Laudo gerado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report:
+                    type: string
+                    description: Conteúdo do laudo gerado
+
+  /reports/generate/{evidenceId}:
+    post:
+      summary: Gerar laudo para uma evidência específica
+      tags:
+        - Reports
+      parameters:
+        - in: path
+          name: evidenceId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Laudo gerado para a evidência
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report:
+                    type: string
+                    description: Conteúdo do laudo gerado
+  
+  /odontograms:
+    post:
+      summary: Criar novo odontograma
+      tags: [Odontogram]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OdontogramInput'
+      responses:
+        '201':
+          description: Odontograma criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OdontogramResponse'
+        '400':
+          description: Erro de validação
+        '403':
+          description: Acesso negado
+        '500':
+          description: Erro interno
+
+  /odontograms/victim/{victimId}:
+    get:
+      summary: Obter todos os odontogramas de uma vítima
+      tags: [Odontogram]
+      parameters:
+        - in: path
+          name: victimId
+          required: true
+          schema:
+            type: string
+          description: ID da vítima
+      responses:
+        '200':
+          description: Lista de odontogramas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OdontogramResponse'
+        '500':
+          description: Erro interno
+
+  /odontograms/{odontogramId}:
+    get:
+      summary: Obter um odontograma por ID
+      tags: [Odontogram]
+      parameters:
+        - in: path
+          name: odontogramId
+          required: true
+          schema:
+            type: string
+          description: ID do odontograma
+      responses:
+        '200':
+          description: Odontograma encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OdontogramResponse'
+        '404':
+          description: Odontograma não encontrado
+        '500':
+          description: Erro interno
+
+    put:
+      summary: Atualizar um odontograma
+      tags: [Odontogram]
+      parameters:
+        - in: path
+          name: odontogramId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OdontogramInput'
+      responses:
+        '200':
+          description: Odontograma atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OdontogramResponse'
+        '400':
+          description: Erro de validação
+        '403':
+          description: Acesso negado
+        '404':
+          description: Odontograma não encontrado
+        '500':
+          description: Erro interno
+
+    delete:
+      summary: Deletar um odontograma
+      tags: [Odontogram]
+      parameters:
+        - in: path
+          name: odontogramId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Odontograma excluído com sucesso
+        '403':
+          description: Acesso negado
+        '404':
+          description: Odontograma não encontrado
+        '500':
+          description: Erro interno
+  /auditlogs:
+    get:
+      summary: Listar logs de auditoria com filtros e paginação
+      tags: [AuditLog]
+      parameters:
+        - name: page
+          in: query
+          description: Número da página (default: 1)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Número de logs por página (default: 50)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: userId
+          in: query
+          description: Filtrar por ID do usuário
+          required: false
+          schema:
+            type: string
+        - name: action
+          in: query
+          description: Filtrar por tipo de ação (ex: create, update, delete)
+          required: false
+          schema:
+            type: string
+        - name: targetModel
+          in: query
+          description: Filtrar pelo nome do modelo afetado (ex: Evidence, Victim)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de logs de auditoria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  totalLogs:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  logsPerPage:
+                    type: integer
+                  auditLogs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                    nullable: true
+  
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        telephone:
+          type: string
+        password:
+          type: string
+        cro:
+          type: string
+        photo:
+          type: string
+        role:
+          type: string
+
+
+    CaseInput:
+      type: object
+      properties:
+        nameCase:
+          type: string
+          description: Nome do caso
+        Description:
+          type: string
+          description: Descrição detalhada do caso
+        status:
+          type: string
+          description: Status do caso (ex: aberto, fechado)
+        location:
+          type: string
+          description: Local do caso
+        category:
+          type: string
+          description: Categoria do caso
+        dateCase:
+          type: string
+          format: date
+          description: Data do ocorrido
+        hourCase:
+          type: string
+          description: Hora do ocorrido
+        team:
+          type: array
+          items:
+            type: string
+          description: IDs dos usuários atribuídos
+      required:
+        - nameCase
+        - status
+        - location
+        - category
+
+    Case:
+      allOf:
+        - $ref: '#/components/schemas/CaseInput'
+        - type: object
+          properties:
+            _id:
+              type: string
+            responsibleExpert:
+              type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+                role:
+                  type: string
+            team:
+              type: array
+              items:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  name:
+                    type: string
+                  role:
+                    type: string
+            evidences:
+              type: array
+              items:
+                type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    EvidenceInput:
+      type: object
+      required: [evidenceType, title, data]
+      properties:
+        evidenceType:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        data:
+          type: string
+        category:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+
+    Evidence:
+      type: object
+      properties:
+        _id:
+          type: string
+        caseId:
+          type: string
+        evidenceType:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        data:
+          type: string
+        category:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        collectedBy:
+          type: object
+          properties:
+            _id:
+              type: string
+            name:
+              type: string
+
+    EvidenceListResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+        evidences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+
+    VictimInput:
+      type: object
+      required: [case, victimCode, identificationStatus]
+      properties:
+        case:
+          type: string
+        victimCode:
+          type: string
+        identificationStatus:
+          type: string
+        name:
+          type: string
+        ageAtDeath:
+          type: number
+        estimatedAgeRange:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+        gender:
+          type: string
+        ethnicityRace:
+          type: string
+        statureCm:
+          type: number
+        bodyMassIndexCategory:
+          type: string
+        contact:
+          type: string
+        lastKnownAddress:
+          type: string
+        dateOfDeath:
+          type: string
+          format: date
+        timeOfDeath:
+          type: string
+        dateOfDiscovery:
+          type: string
+          format: date
+        timeOfDayDiscovery:
+          type: string
+        discoveryLocation:
+          type: string
+        mannerOfDeath:
+          type: string
+        causeOfDeathPrimary:
+          type: string
+        dentalRecordStatus:
+          type: string
+        dentalRecordSource:
+          type: string
+        skeletalFeatures:
+          type: string
+        otherDistinctivePhysicalFeatures:
+          type: string
+        postMortemIntervalEstimate:
+          type: string
+        toxicologyScreening:
+          type: string
+        dnaAnalysis:
+          type: string
+        fingerprintAnalysis:
+          type: string
+        photosUrls:
+          type: array
+          items:
+            type: string
+        additionalNotes:
+          type: string
+
+    VictimUpdate:
+      allOf:
+        - $ref: '#/components/schemas/VictimInput'
+    Victim:
+      allOf:
+        - $ref: '#/components/schemas/VictimInput'
+        - type: object
+          properties:
+            _id:
+              type: string
+            createdBy:
+              type: object
+              properties:
+                name:
+                  type: string
+            lastUpdatedBy:
+              type: object
+              properties:
+                name:
+                  type: string
+            case:
+              type: object
+              properties:
+                nameCase:
+                  type: string
+
+    OdontogramInput:
+      type: object
+      required:
+        - victim
+        - odontogramType
+        - teeth
+      properties:
+        victim:
+          type: string
+        odontogramType:
+          type: string
+          enum: [ante_mortem, post_mortem]
+        examinationDate:
+          type: string
+          format: date-time
+        teeth:
+          type: array
+          items:
+            type: object
+        generalObservations:
+          type: string
+        summaryForIdentification:
+          type: string
+        anteMortemDataSources:
+          type: string
+        pointsOfCorrespondence:
+          type: string
+        discrepancies:
+          type: string
+        identificationConclusion:
+          type: string
+        odontogramImageUrl:
+          type: string
+        odontogramImageNotes:
+          type: string
+
+    OdontogramResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+        victim:
+          $ref: '#/components/schemas/VictimBasic'
+        case:
+          $ref: '#/components/schemas/CaseBasic'
+        odontogramType:
+          type: string
+        examinationDate:
+          type: string
+          format: date-time
+        examiner:
+          $ref: '#/components/schemas/UserBasic'
+        teeth:
+          type: array
+          items:
+            type: object
+        generalObservations:
+          type: string
+        summaryForIdentification:
+          type: string
+        anteMortemDataSources:
+          type: string
+        pointsOfCorrespondence:
+          type: string
+        discrepancies:
+          type: string
+        identificationConclusion:
+          type: string
+        odontogramImageUrl:
+          type: string
+        odontogramImageNotes:
+          type: string
+        createdBy:
+          $ref: '#/components/schemas/UserBasic'
+        lastUpdatedBy:
+          $ref: '#/components/schemas/UserBasic'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VictimBasic:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        victimCode:
+          type: string
+
+    CaseBasic:
+      type: object
+      properties:
+        _id:
+          type: string
+        nameCase:
+          type: string
+
+    UserBasic:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+
+    AuditLogResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          $ref: '#/components/schemas/UserBasic'
+        action:
+          type: string
+          example: "create"
+        targetModel:
+          type: string
+          example: "Evidence"
+        targetId:
+          type: string
+          example: "66421e76b205d255d8a05f6a"
+        changes:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time

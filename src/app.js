@@ -15,6 +15,8 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config(); // para usar as variáveis que ficam no .env
 const helmet = require('helmet');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 // Criando o servidor com o express
 const app = express();
@@ -41,6 +43,8 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 const uploadsDir = path.join(__dirname, 'uploads');
 const reportsDir = path.join(uploadsDir, 'reports');
+// Caminho para o arquivo swagger.yaml
+const swaggerDocument = YAML.load(path.join(__dirname, '../docs/swagger.yaml'));
 
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -59,3 +63,4 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/victim', victimRoutes);
 app.use('/api/odontogram', odontogramRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

@@ -15,6 +15,8 @@
     "mongoose": "^8.13.0",
     "morgan": "^1.10.0",
     "path": "^0.12.7",
-    "pdfmake": "^0.2.18"
+    "pdfmake": "^0.2.18",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   }
 }
